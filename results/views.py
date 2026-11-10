@@ -363,27 +363,30 @@ def result_sheet_detail(request, pk):
         messages.error(request, 'You do not have access to this result sheet.')
         return redirect('results:dashboard')
 
-    registered_items = RegisteredCourseItem.objects.filter(
-        offering=sheet.offering
-    ).select_related('registration__student')
+    # ONLY sync students if the sheet is in DRAFT state.
+    # Prevents pollution of Submitted/Published sheets with empty rows.
+    if sheet.status == 'DRAFT':
+        registered_items = RegisteredCourseItem.objects.filter(
+            offering=sheet.offering
+        ).select_related('registration__student')
 
-    existing_student_ids = set(sheet.grades.values_list('student_id', flat=True))
+        existing_student_ids = set(sheet.grades.values_list('student_id', flat=True))
 
-    new_grades_to_create = []
-    for item in registered_items:
-        student = item.registration.student
-        if student.id not in existing_student_ids:
-            new_grades_to_create.append(StudentGrade(
-                result_sheet=sheet,
-                student=student,
-                ca_score=Decimal('0'),
-                exam_score=Decimal('0'),
-                remarks=''
-            ))
-    
-    if new_grades_to_create:
-        for grade_obj in new_grades_to_create:
-            grade_obj.save()
+        new_grades_to_create = []
+        for item in registered_items:
+            student = item.registration.student
+            if student.id not in existing_student_ids:
+                new_grades_to_create.append(StudentGrade(
+                    result_sheet=sheet,
+                    student=student,
+                    ca_score=Decimal('0'),
+                    exam_score=Decimal('0'),
+                    remarks=''
+                ))
+        
+        if new_grades_to_create:
+            for grade_obj in new_grades_to_create:
+                grade_obj.save()
         
     grades = sheet.grades.select_related('student__user').order_by('student__matric_number')
 
@@ -602,6 +605,12 @@ def upload_result_csv(request, pk):
 @login_required
 def submit_result_sheet(request, pk):
     sheet = get_object_or_404(ResultSheet, pk=pk)
+    
+    # SECURITY GUARD: Only allow submission if Draft or Returned
+    if sheet.status not in ['DRAFT', 'RETURNED']:
+        messages.error(request, f'Cannot submit results. Current status is "{sheet.get_status_display()}".')
+        return redirect('results:sheet_detail', pk=pk)
+
     if not _can_action_result_sheet(request.user, sheet, 'LECTURER'):
         messages.error(request, 'You do not have access to this result sheet.')
         return redirect('results:dashboard')
@@ -731,3 +740,4 @@ def student_view_results(request):
     }
     
     return render(request, 'results/student_results.html', context)
+
