@@ -1,0 +1,26 @@
+﻿services:
+  - type: web
+    name: iaue-ams
+    runtime: python
+    plan: free
+    region: singapore # Choose closest region or 'oregon'
+    buildCommand: "./bin/render-build.sh"
+    startCommand: "gunicorn core.wsgi:application --bind 0.0.0.0:"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
+      - key: DATABASE_URL
+        fromDatabase:
+          name: iaue-neon-db
+          property: connectionString
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: False
+      - key: ALLOWED_HOSTS
+        value: '*' # Render provides the hostname automatically usually, but safe to wildcard for now or set specific domain later
+
+databases:
+  - name: iaue-neon-db
+    plan: free
+    postgresMajorVersion: 15
