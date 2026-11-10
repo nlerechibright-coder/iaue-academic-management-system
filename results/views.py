@@ -539,6 +539,11 @@ def upload_result_csv(request, pk):
     if not _can_action_result_sheet(request.user, sheet, 'LECTURER'):
         messages.error(request, 'You do not have access to this result sheet.')
         return redirect('results:dashboard')
+        
+    # SECURITY GUARD: Only allow upload if Draft or Returned
+    if sheet.status not in ['DRAFT', 'RETURNED']:
+        messages.error(request, f'Cannot upload results. Current status is "{sheet.get_status_display()}".')
+        return redirect('results:sheet_detail', pk=pk)
 
     if request.method == 'POST':
         uploaded_file = request.FILES.get('csv_file')
@@ -614,6 +619,11 @@ def submit_result_sheet(request, pk):
     if not _can_action_result_sheet(request.user, sheet, 'LECTURER'):
         messages.error(request, 'You do not have access to this result sheet.')
         return redirect('results:dashboard')
+        
+    # SECURITY GUARD: Only allow upload if Draft or Returned
+    if sheet.status not in ['DRAFT', 'RETURNED']:
+        messages.error(request, f'Cannot upload results. Current status is "{sheet.get_status_display()}".')
+        return redirect('results:sheet_detail', pk=pk)
 
     sheet.status = 'SUBMITTED'
     sheet.submission_date = timezone.now()
@@ -740,4 +750,5 @@ def student_view_results(request):
     }
     
     return render(request, 'results/student_results.html', context)
+
 
