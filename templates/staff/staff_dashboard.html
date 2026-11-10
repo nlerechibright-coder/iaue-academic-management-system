@@ -1,0 +1,188 @@
+<!-- templates/staff/staff_dashboard.html -->
+{% extends 'management/base.html' %}
+{% block title %}Lecturer Workspace{% endblock %}
+{% block page_title %}My Teaching Portfolio{% endblock %}
+
+{% block mgmt_content %}
+<div class="max-w-7xl mx-auto space-y-8">
+
+    <!-- HERO SECTION: Context & Quick Stats -->
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-8 text-white shadow-xl ring-1 ring-white/10">
+        <!-- Decorative Elements -->
+        <div class="absolute inset-0 opacity-5 pointer-events-none">
+            <svg class="h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" stroke-width="0.5"/></pattern></defs>
+                <rect width="100%" height="100%" fill="url(#grid)" />
+            </svg>
+        </div>
+        <div class="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl"></div>
+
+        <div class="relative z-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+            <div>
+                <p class="text-sm font-semibold uppercase tracking-[0.2em] text-blue-300 mb-2">Academic Staff Portal</p>
+                <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-white">
+                    Hello, <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-cyan-200">{{ user.get_full_name }}</span>
+                </h2>
+                <p class="mt-2 text-slate-300 max-w-lg text-sm md:text-base">
+                    Manage your course assignments, upload student results via CSV, and track submission status.
+                </p>
+            </div>
+            
+            <!-- Active Session Pill -->
+            <div class="flex-shrink-0">
+                <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md px-5 py-3 shadow-lg">
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Current Cycle</p>
+                    <div class="flex items-center gap-3">
+                        <div class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                        <span class="font-semibold text-white text-lg">{{ active_session.name|default:"No Active Session" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BULK UPLOAD TOOL CARD -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 relative overflow-hidden rounded-2xl bg-slate-900 p-8 text-white shadow-lg">
+            <div class="absolute top-0 right-0 p-6 opacity-10">
+                <svg class="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <div class="relative z-10">
+                <span class="inline-flex items-center rounded-full bg-blue-500/20 px-3 py-1 text-xs font-bold text-blue-300 ring-1 ring-inset ring-blue-400/30 mb-4">
+                    ⚡ BULK UPLOAD READY
+                </span>
+                <h3 class="text-2xl font-bold mb-2">Excel / CSV Result Entry</h3>
+                <p class="text-slate-400 mb-6 max-w-md">
+                    Download the standardized template, fill in student scores offline, and upload for automatic validation and grading calculation.
+                </p>
+                
+                <div class="flex flex-wrap gap-4">
+                    <!-- FIXED: Links to generic download route -->
+                    <a href="{% url 'results:download_generic_template' %}" class="inline-flex items-center gap-2 rounded-xl bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/20 border border-white/10">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        Download Generic Template
+                    </a>
+                    
+                    <button type="button" onclick="document.getElementById('courses-table').scrollIntoView({behavior: 'smooth'})" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-900/20 transition hover:bg-emerald-700">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        Select Course to Upload
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUICK ACTIONS SIDEBAR -->
+        <div class="space-y-4">
+            <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h4 class="mb-4 text-sm font-bold uppercase tracking-wider text-slate-500">Quick Links</h4>
+                <div class="space-y-3">
+                    <a href="#" class="flex items-center gap-3 rounded-lg p-3 text-sm font-medium text-slate-700 hover:bg-slate-50 transition">
+                        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                        </div>
+                        View Syllabus Docs
+                    </a>
+                    <a href="#" class="flex items-center gap-3 rounded-lg p-3 text-sm font-medium text-slate-700 hover:bg-slate-50 transition">
+                        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        </div>
+                        Academic Calendar
+                    </a>
+                    <a href="#" class="flex items-center gap-3 rounded-lg p-3 text-sm font-medium text-slate-700 hover:bg-slate-50 transition">
+                        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-100 text-rose-600">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9.228a3 3 0 104.243 4.243 3 3 0 00-4.243-4.243zM9.882 13.536l-2.12 2.121a3 3 0 104.243 4.243l2.12-2.121"/></svg>
+                        </div>
+                        Support Desk
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ASSIGNED COURSES TABLE -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden" id="courses-table">
+        <div class="border-b border-slate-200 bg-slate-50 px-6 py-4 flex items-center justify-between">
+            <h3 class="text-lg font-bold text-slate-900">My Assigned Courses</h3>
+            <span class="text-xs font-medium text-slate-500 bg-white px-2 py-1 rounded border border-slate-200">Total: {{ assignments.count }}</span>
+        </div>
+        
+        {% if assignments %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-white text-xs font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-100">
+                    <tr>
+                        <th scope="col" class="px-6 py-4">Course Code</th>
+                        <th scope="col" class="px-6 py-4">Title</th>
+                        <th scope="col" class="px-6 py-4">Level / Sem</th>
+                        <th scope="col" class="px-6 py-4">Status</th>
+                        <th scope="col" class="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for assignment in assignments %}
+                    <tr class="group hover:bg-slate-50/80 transition-colors">
+                        <td class="whitespace-nowrap px-6 py-4 font-mono font-bold text-indigo-600">
+                            {{ assignment.offering.course.code }}
+                        </td>
+                        <td class="px-6 py-4 font-medium text-slate-900">
+                            {{ assignment.offering.course.title }}
+                        </td>
+                        <td class="px-6 py-4 text-slate-500">
+                            {{ assignment.offering.level }} Level • {{ assignment.offering.session.name }}
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if assignment.offering.result_sheet %}
+                                {% if assignment.offering.result_sheet.status == 'PUBLISHED' %}
+                                    <span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">Published</span>
+                                {% elif assignment.offering.result_sheet.status == 'SUBMITTED' %}
+                                    <span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20">Submitted</span>
+                                {% else %}
+                                    <span class="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">Draft</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">Not Started</span>
+                            {% endif %}
+                        </td>
+                        <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
+                            <div class="flex items-center justify-end gap-2">
+                                {% if not assignment.offering.result_sheet %}
+                                    <!-- CRITICAL FIX: Use init_sheet to create record first -->
+                                    <a href="{% url 'results:init_sheet' assignment.offering.id %}" class="inline-flex items-center gap-1 rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 transition">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                        Start Drafting
+                                    </a>
+                                {% else %}
+                                    <!-- Edit/Upload Button -->
+                                    <a href="{% url 'results:sheet_detail' assignment.offering.result_sheet.pk %}" class="inline-flex items-center gap-1 rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 transition">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                        Manage Results
+                                    </a>
+                                    
+                                    {% if assignment.offering.result_sheet.status == 'DRAFT' %}
+                                        <!-- Submit Button (FIXED NAME: results:submit) -->
+                                        <form method="POST" action="{% url 'results:submit' assignment.offering.result_sheet.pk %}" class="inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 transition shadow-sm">
+                                                Submit to HOD
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="py-12 text-center">
+            <svg class="mx-auto h-12 w-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            <h3 class="mt-2 text-sm font-semibold text-slate-900">No courses assigned</h3>
+            <p class="mt-1 text-sm text-slate-500">Contact administration to receive course offerings.</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

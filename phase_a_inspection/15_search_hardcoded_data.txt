@@ -1,0 +1,8 @@
+﻿core\settings.py:20: 'django.contrib.staticfiles',
+core\settings.py:103: STATIC_URL = 'static/'
+core\settings.py:104: STATICFILES_DIRS = [BASE_DIR / 'static']
+core\settings.py:105: STATIC_ROOT = BASE_DIR / 'staticfiles'
+core\urls.py:4: from django.conf.urls.static import static
+core\urls.py:16: urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+core\urls.py:17: urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+students\models.py:20: @staticmethod

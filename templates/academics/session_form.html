@@ -1,0 +1,64 @@
+<!-- templates/academics/session_form.html -->
+{% extends 'management/base.html' %}
+{% block title %}{% if session %}Edit Session{% else %}Create Session{% endif %}{% endblock %}
+{% block page_title %}{% if session %}Edit Academic Session{% else %}New Academic Session{% endif %}{% endblock %}
+
+{% block mgmt_content %}
+<div class="max-w-2xl mx-auto bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-4">
+    <div class="flex items-center gap-3 mb-6">
+        <a href="{% url 'academics:session_list' %}" class="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition">
+            <i data-lucide="arrow-left" class="w-5 h-5 text-gray-600"></i>
+        </a>
+        <h2 class="text-xl font-bold text-gray-800">
+            {% if session %}Update Details{% else %}Configure New Session{% endif %}
+        </h2>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="mb-4 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-100{% else %}bg-green-50 text-green-700 border border-green-100{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST" class="space-y-5">
+        {% csrf_token %}
+        
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Session Label</label>
+            <input type="text" name="name" required value="{{ session.name|default:'' }}" 
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                   placeholder="e.g., 2025/2026">
+            <p class="text-xs text-gray-500 mt-1">Must be unique. Format: Year/Year.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                <input type="date" name="start_date" value="{{ session.start_date|date:'Y-m-d'|default:'' }}" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                <input type="date" name="end_date" value="{{ session.end_date|date:'Y-m-d'|default:'' }}" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+        </div>
+
+        {% if session %}
+        <div class="flex items-center">
+            <input id="is_active" name="is_active" type="checkbox" {% if session.is_active %}checked{% endif %} class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+            <label for="is_active" class="ml-2 block text-sm text-gray-900">Set as Active Session</label>
+        </div>
+        {% endif %}
+
+        <div class="pt-4 flex justify-end gap-3 border-t border-gray-100 mt-6">
+            <a href="{% url 'academics:session_list' %}" class="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium">Cancel</a>
+            <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition shadow-sm">
+                {% if session %}Save Changes{% else %}Create Session{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

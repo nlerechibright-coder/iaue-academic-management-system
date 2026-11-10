@@ -1,0 +1,39 @@
+﻿{% extends 'management/base.html' %}
+{% block title %}Lecturer Assignments{% endblock %}
+{% block page_title %}Lecturer Assignments{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+    <h3 class="text-lg font-bold text-gray-800">All Assignments</h3>
+    <a href="{% url 'courses:assignment_create' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition flex items-center gap-2">
+        <i data-lucide="plus" class="w-4 h-4"></i> Assign Lecturer
+    </a>
+</div>
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <table class="w-full text-left">
+        <thead class="bg-gray-50 text-gray-600 text-sm uppercase">
+            <tr>
+                <th class="p-4">Lecturer</th>
+                <th class="p-4">Course</th>
+                <th class="p-4">Section</th>
+                <th class="p-4 text-right">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+            {% for a in assignments %}
+            <tr class="hover:bg-gray-50">
+                <td class="p-4 font-medium text-gray-800">{{ a.lecturer.user.get_full_name }}</td>
+                <td class="p-4 font-mono text-gray-600">{{ a.offering.course.code }}</td>
+                <td class="p-4 text-gray-600">{{ a.section.name }}</td>
+                <td class="p-4 text-right space-x-2">
+                    <a href="{% url 'courses:assignment_edit' a.pk %}" class="text-blue-600 hover:underline text-sm">Edit</a>
+                    <a href="{% url 'courses:assignment_delete' a.pk %}" class="text-red-600 hover:underline text-sm">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="p-8 text-center text-gray-500">No assignments found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

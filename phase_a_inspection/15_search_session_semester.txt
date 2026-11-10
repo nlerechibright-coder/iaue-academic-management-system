@@ -1,0 +1,74 @@
+﻿academics\models.py:3: class AcademicSession(models.Model):
+academics\models.py:4: name = models.CharField(max_length=20, unique=True, help_text="e.g., 2023/2024")
+academics\models.py:17: AcademicSession.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
+academics\models.py:20: class Semester(models.Model):
+academics\models.py:21: SEMESTER_CHOICES = [
+academics\models.py:22: ('FIRST', 'First Semester'),
+academics\models.py:23: ('SECOND', 'Second Semester'),
+academics\models.py:25: name = models.CharField(max_length=20, choices=SEMESTER_CHOICES)
+academics\models.py:26: session = models.ForeignKey(AcademicSession, on_delete=models.CASCADE, related_name='semesters')
+academics\models.py:32: unique_together = ('session', 'name')
+academics\models.py:33: ordering = ['-session__name', 'name']
+academics\models.py:36: return f"{self.get_name_display()} - {self.session.name}"
+academics\models.py:40: Semester.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
+academics\migrations\0001_initial.py:16: name='AcademicSession',
+academics\migrations\0001_initial.py:19: ('name', models.CharField(help_text='e.g., 2023/2024', max_length=20, unique=True)),
+academics\migrations\0001_initial.py:29: name='Semester',
+academics\migrations\0001_initial.py:32: ('name', models.CharField(choices=[('FIRST', 'First Semester'), ('SECOND', 'Second Semester')], max_length=20)),
+academics\migrations\0001_initial.py:36: ('session', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='semesters', to='academics.academicsession')),
+academics\migrations\0001_initial.py:39: 'ordering': ['-session__start_date', 'name'],
+academics\migrations\0001_initial.py:40: 'unique_together': {('session', 'name')},
+academics\migrations\0002_alter_academicsession_options_alter_semester_options_and_more.py:14: name='academicsession',
+academics\migrations\0002_alter_academicsession_options_alter_semester_options_and_more.py:18: name='semester',
+academics\migrations\0002_alter_academicsession_options_alter_semester_options_and_more.py:19: options={'ordering': ['-session__name', 'name']},
+academics\migrations\0002_alter_academicsession_options_alter_semester_options_and_more.py:22: model_name='academicsession',
+academics\migrations\0002_alter_academicsession_options_alter_semester_options_and_more.py:27: model_name='academicsession',
+academics\migrations\0002_alter_academicsession_options_alter_semester_options_and_more.py:32: model_name='semester',
+academics\migrations\0002_alter_academicsession_options_alter_semester_options_and_more.py:37: model_name='semester',
+core\settings.py:18: 'django.contrib.sessions',
+core\settings.py:39: 'django.contrib.sessions.middleware.SessionMiddleware',
+courses\forms.py:4: from academics.models import AcademicSession
+courses\forms.py:11: fields = ['code', 'title', 'department', 'programme', 'level', 'semester', 'credit_units', 'is_compulsory', 'prerequisites']
+courses\forms.py:18: 'semester': forms.Select(attrs={'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none'}),
+courses\forms.py:24: # Custom text field for manual session input
+courses\forms.py:25: session_name = forms.CharField(
+courses\forms.py:29: 'placeholder': 'e.g., 2023/2024'
+courses\forms.py:31: help_text="Type the session name. It will be created automatically if it doesn't exist."
+courses\forms.py:36: # Note: 'session' is intentionally excluded here so Django doesn't try to auto-map it
+courses\forms.py:37: fields = ['course', 'semester_type', 'level']
+courses\forms.py:40: 'semester_type': forms.Select(attrs={'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none'}),
+courses\forms.py:44: def clean_session_name(self):
+courses\forms.py:45: return self.cleaned_data['session_name'].strip()
+courses\forms.py:51: # Get or create the AcademicSession based on the typed name
+courses\forms.py:52: session_name = self.cleaned_data['session_name']
+courses\forms.py:53: session_obj, _ = AcademicSession.objects.get_or_create(name=session_name)
+courses\forms.py:56: instance.session = session_obj
+courses\models.py:9: semester = models.CharField(max_length=10, choices=[('FIRST', 'First Semester'), ('SECOND', 'Second Semester')])
+courses\models.py:23: session = models.ForeignKey('academics.AcademicSession', on_delete=models.CASCADE, related_name='offerings')
+courses\models.py:24: semester_type = models.CharField(max_length=10, choices=[('FIRST', 'First Semester'), ('SECOND', 'Second Semester')])
+courses\models.py:28: unique_together = ('course', 'session', 'semester_type', 'level')
+courses\models.py:29: ordering = ['session__name', 'course__code']
+courses\models.py:32: return f"{self.course.code} ({self.session.name} - {self.semester_type})"
+courses\views.py:57: offerings = CourseOffering.objects.select_related('course', 'session').all()
+courses\migrations\0001_initial.py:25: ('semester', models.CharField(choices=[('FIRST', 'First Semester'), ('SECOND', 'Second Semester')], max_length=10)),
+courses\migrations\0001_initial.py:41: ('semester_type', models.CharField(choices=[('FIRST', 'First Semester'), ('SECOND', 'Second Semester')], max_length=10)),
+courses\migrations\0001_initial.py:44: ('session', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='offerings', to='academics.academicsession')),
+courses\migrations\0001_initial.py:47: 'ordering': ['session__name', 'course__code'],
+courses\migrations\0001_initial.py:48: 'unique_together': {('course', 'session', 'semester_type', 'level')},
+institution\views.py:10: from academics.models import AcademicSession, Semester
+institution\views.py:27: 'active_session': AcademicSession.objects.filter(is_active=True).first(),
+institution\views.py:28: 'active_semester': Semester.objects.filter(is_active=True).first(),
+students\forms.py:15: admission_session = forms.CharField(max_length=20, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none', 'placeholder': 'e.g., 2023/2024'}))
+students\models.py:10: admission_session = models.CharField(max_length=20, help_text="e.g., 2023/2024")
+students\models.py:24: admission_session__startswith=str(admission_year)
+students\views.py:21: admission_year = form.cleaned_data['admission_session'].split('/')[0]
+students\views.py:41: admission_session=form.cleaned_data['admission_session'],
+students\migrations\0001_initial.py:24: ('admission_session', models.CharField(help_text='e.g., 2023/2024', max_length=20)),
+templates\courses\offering_list.html:17: <th class="p-4">Session</th>
+templates\courses\offering_list.html:18: <th class="p-4">Semester</th>
+templates\courses\offering_list.html:27: <td class="p-4 text-gray-600">{{ o.session.name }}</td>
+templates\courses\offering_list.html:28: <td class="p-4 text-gray-600">{{ o.semester_type }}</td>
+templates\management\dashboard.html:49: <span class="text-sm font-medium text-blue-800">Active Session</span>
+templates\management\dashboard.html:53: <span class="text-sm font-medium text-green-800">Active Semester</span>
+templates\students\student_list.html:21: <th class="p-4">Session</th>
+templates\students\student_list.html:32: <td class="p-4 text-gray-600">{{ s.admission_session }}</td>

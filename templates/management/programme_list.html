@@ -1,0 +1,82 @@
+﻿<!-- templates/management/programme_list.html -->
+{% extends 'management/base.html' %}
+{% block title %}Programmes{% endblock %}
+{% block page_title %}Academic Programmes{% endblock %}
+
+{% block mgmt_content %}
+<div class="max-w-7xl mx-auto space-y-6">
+    
+    <!-- Header & Action Bar -->
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-900">Programmes</h2>
+            <p class="mt-1 text-sm text-slate-500">Manage degree programmes offered by departments.</p>
+        </div>
+        <a href="{% url 'institution:programme_create' %}" 
+           class="inline-flex items-center justify-center rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600">
+            <svg class="-ml-0.5 mr-2 h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add New Programme
+        </a>
+    </div>
+
+    <!-- Table Container -->
+    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        {% if programmes %}
+        <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <tr>
+                    <th scope="col" class="px-6 py-4">Code</th>
+                    <th scope="col" class="px-6 py-4">Programme Name</th>
+                    <th scope="col" class="px-6 py-4">Department</th>
+                    <th scope="col" class="px-6 py-4">Max Level</th>
+                    <th scope="col" class="px-6 py-4 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for prog in programmes %}
+                <tr class="group transition-colors hover:bg-slate-50/80">
+                    <td class="whitespace-nowrap px-6 py-4 font-mono text-xs font-bold text-violet-600">{{ prog.code }}</td>
+                    <td class="px-6 py-4 font-medium text-slate-900">{{ prog.name }}</td>
+                    <td class="px-6 py-4 text-slate-500">
+                        {% if prog.department %}
+                            <span class="inline-flex items-center rounded-md bg-cyan-50 px-2 py-1 text-xs font-medium text-cyan-700 ring-1 ring-inset ring-cyan-600/20">
+                                {{ prog.department.name }}
+                            </span>
+                        {% else %}
+                            <span class="text-xs text-slate-400 italic">Unassigned</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 text-slate-500">
+                        <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700">
+                            {{ prog.max_level }} Level
+                        </span>
+                    </td>
+                    <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
+                        <div class="flex items-center justify-end gap-3 opacity-0 transition-opacity group-hover:opacity-100">
+                            <a href="{% url 'institution:programme_edit' prog.pk %}" class="text-slate-400 hover:text-violet-600" title="Edit">
+                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                            </a>
+                            <a href="{% url 'institution:programme_delete' prog.pk %}" class="text-slate-400 hover:text-red-600" title="Delete">
+                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="flex flex-col items-center justify-center py-16 text-center">
+            <div class="mb-4 rounded-full bg-slate-100 p-4">
+                <svg class="h-8 w-8 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            </div>
+            <h3 class="text-lg font-semibold text-slate-900">No programmes found</h3>
+            <p class="mt-1 max-w-md text-sm text-slate-500">Define academic programmes to structure student learning paths.</p>
+            <a href="{% url 'institution:programme_create' %}" class="mt-6 inline-flex items-center rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700">
+                Create Programme
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

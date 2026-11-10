@@ -1,0 +1,40 @@
+﻿{% extends 'management/base.html' %}
+{% block title %}All Students{% endblock %}
+{% block page_title %}Student Records{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+    <h3 class="text-lg font-bold text-gray-800">All Students</h3>
+    <a href="{% url 'students:student_clearance' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition flex items-center gap-2">
+        <i data-lucide="user-plus" class="w-4 h-4"></i> Clear New Student
+    </a>
+</div>
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <table class="w-full text-left">
+        <thead class="bg-gray-50 text-gray-600 text-sm uppercase">
+            <tr>
+                <th class="p-4">Matric Number</th>
+                <th class="p-4">Name</th>
+                <th class="p-4">Department</th>
+                <th class="p-4">Programme</th>
+                <th class="p-4">Level</th>
+                <th class="p-4">Session</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+            {% for s in students %}
+            <tr class="hover:bg-gray-50">
+                <td class="p-4 font-mono font-medium text-gray-800">{{ s.matric_number }}</td>
+                <td class="p-4 text-gray-800">{{ s.user.get_full_name }}</td>
+                <td class="p-4 text-gray-600">{{ s.department.name }}</td>
+                <td class="p-4 text-gray-600">{{ s.programme.name }}</td>
+                <td class="p-4 text-gray-600">{{ s.current_level }}</td>
+                <td class="p-4 text-gray-600">{{ s.admission_session }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="p-8 text-center text-gray-500">No students found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

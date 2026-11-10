@@ -1,0 +1,39 @@
+﻿{% extends 'management/base.html' %}
+{% block title %}Faculties{% endblock %}
+{% block page_title %}Faculty Management{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+    <h3 class="text-lg font-bold text-gray-800">All Faculties</h3>
+    <a href="{% url 'institution:faculty_create' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition flex items-center gap-2">
+        <i data-lucide="plus" class="w-4 h-4"></i> Add Faculty
+    </a>
+</div>
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <table class="w-full text-left">
+        <thead class="bg-gray-50 text-gray-600 text-sm uppercase">
+            <tr>
+                <th class="p-4">Name</th>
+                <th class="p-4">Code</th>
+                <th class="p-4">Departments</th>
+                <th class="p-4 text-right">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+            {% for f in faculties %}
+            <tr class="hover:bg-gray-50">
+                <td class="p-4 font-medium text-gray-800">{{ f.name }}</td>
+                <td class="p-4 text-gray-600 font-mono">{{ f.code }}</td>
+                <td class="p-4 text-gray-600">{{ f.dept_count }}</td>
+                <td class="p-4 text-right space-x-2">
+                    <a href="{% url 'institution:faculty_edit' f.pk %}" class="text-blue-600 hover:underline text-sm">Edit</a>
+                    <a href="{% url 'institution:faculty_delete' f.pk %}" class="text-red-600 hover:underline text-sm">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="p-8 text-center text-gray-500">No faculties found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

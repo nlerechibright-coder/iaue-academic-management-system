@@ -1,0 +1,12 @@
+﻿academics
+accounts
+analytics
+approvals
+audit
+courses
+institution
+registration
+results
+staff
+students
+transcripts

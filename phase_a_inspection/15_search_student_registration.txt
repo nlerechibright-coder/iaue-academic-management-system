@@ -1,0 +1,18 @@
+﻿academics\admin.py:3: # Register your models here.
+accounts\admin.py:3: # Register your models here.
+analytics\admin.py:3: # Register your models here.
+approvals\admin.py:3: # Register your models here.
+audit\admin.py:3: # Register your models here.
+core\settings.py:29: 'registration',
+courses\admin.py:3: # Register your models here.
+institution\admin.py:3: # Register your models here.
+registration\admin.py:3: # Register your models here.
+registration\apps.py:4: class RegistrationConfig(AppConfig):
+registration\apps.py:5: name = 'registration'
+results\admin.py:3: # Register your models here.
+staff\admin.py:3: # Register your models here.
+students\admin.py:3: # Register your models here.
+templates\courses\course_list.html:9: <i data-lucide="plus" class="w-4 h-4"></i> Add Course
+templates\courses\course_list.html:38: <tr><td colspan="6" class="p-8 text-center text-gray-500">No courses found. Click "Add Course" to create one.</td></tr>
+templates\management\dashboard.html:71: <span class="text-sm font-medium text-gray-700">Add Course</span>
+transcripts\admin.py:3: # Register your models here.

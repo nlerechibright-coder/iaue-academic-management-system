@@ -1,0 +1,6 @@
+﻿courses\forms.py:11: fields = ['code', 'title', 'department', 'programme', 'level', 'semester', 'credit_units', 'is_compulsory', 'prerequisites']
+courses\forms.py:19: 'credit_units': forms.NumberInput(attrs={'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none'}),
+courses\models.py:10: credit_units = models.IntegerField()
+courses\migrations\0001_initial.py:26: ('credit_units', models.IntegerField()),
+templates\courses\course_list.html:20: <th class="p-4">Units</th>
+templates\courses\course_list.html:31: <td class="p-4 text-gray-600">{{ c.credit_units }}</td>

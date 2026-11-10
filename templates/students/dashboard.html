@@ -1,0 +1,108 @@
+<!-- templates/students/dashboard.html -->
+{% extends 'students/base_student.html' %}
+{% block title %}Student Dashboard{% endblock %}
+{% block page_title %}Welcome Back{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-8">
+
+    <!-- HERO SECTION -->
+    <div class="hero-gradient rounded-2xl p-8 text-white shadow-xl relative overflow-hidden">
+        <div class="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl"></div>
+        <div class="relative z-10">
+            <p class="text-blue-300 text-sm font-semibold uppercase tracking-wider mb-2">Academic Year 2026/2027 • First Semester</p>
+            <h1 class="text-3xl md:text-4xl font-bold mb-4">Hello, {{ user.first_name }}!</h1>
+            <p class="text-slate-300 max-w-2xl text-lg">
+                You are currently registered for <strong>{{ registered_courses_count }}</strong> courses this semester. 
+                Ensure you complete your registration before the deadline.
+            </p>
+            
+            <div class="mt-8 flex flex-wrap gap-4">
+                <a href="{% url 'registration:dashboard' %}" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition shadow-lg shadow-blue-900/20">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    Manage Registration
+                </a>
+                <a href="{% url 'results:student_results' %}" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white px-6 py-3 rounded-xl font-semibold transition border border-white/10">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    View Results
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- QUICK STATS GRID -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Card 1: Units -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-sm font-medium text-slate-500">Credit Units Load</p>
+                    <p class="mt-2 text-3xl font-bold text-slate-900">{{ total_units_registered }} <span class="text-sm font-normal text-slate-400">/ {{ max_allowed_units }}</span></p>
+                </div>
+                <div class="p-3 bg-blue-50 rounded-lg text-blue-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </div>
+            </div>
+            <div class="mt-4 w-full bg-slate-100 rounded-full h-2">
+                <div class="bg-blue-600 h-2 rounded-full" style="width: {{ unit_percentage }}%"></div>
+            </div>
+        </div>
+
+        <!-- Card 2: Status -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-sm font-medium text-slate-500">Registration Status</p>
+                    <p class="mt-2 text-xl font-bold text-emerald-600 uppercase tracking-wide">{{ registration_status }}</p>
+                </div>
+                <div class="p-3 bg-emerald-50 rounded-lg text-emerald-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+            </div>
+            <p class="mt-4 text-xs text-slate-400">Last updated: {{ last_registration_date|date:"d M Y" }}</p>
+        </div>
+
+        <!-- Card 3: Upcoming -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition">
+            <div class="flex items-start justify-between">
+                <div>
+                    <p class="text-sm font-medium text-slate-500">Next Deadline</p>
+                    <p class="mt-2 text-lg font-bold text-slate-900">{{ next_deadline_desc }}</p>
+                </div>
+                <div class="p-3 bg-amber-50 rounded-lg text-amber-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+            </div>
+            <p class="mt-4 text-xs text-slate-400">{{ next_deadline_date|date:"d M Y, H:i" }}</p>
+        </div>
+    </div>
+
+    <!-- RECENT ACTIVITY / ANNOUNCEMENTS PLACEHOLDER -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+            <h3 class="font-bold text-slate-900">System Announcements</h3>
+        </div>
+        <div class="p-6">
+            <div class="space-y-4">
+                <div class="flex gap-4">
+                    <div class="h-10 w-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 font-bold text-xs">ADM</div>
+                    <div>
+                        <h4 class="text-sm font-semibold text-slate-900">Mid-Semester Exams Schedule Released</h4>
+                        <p class="text-sm text-slate-500 mt-1">Please check the academic calendar for specific dates regarding CSC401 and MAT201.</p>
+                        <p class="text-xs text-slate-400 mt-2">Posted 2 hours ago</p>
+                    </div>
+                </div>
+                <div class="flex gap-4 pt-4 border-t border-slate-100">
+                    <div class="h-10 w-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 font-bold text-xs">REG</div>
+                    <div>
+                        <h4 class="text-sm font-semibold text-slate-900">Late Registration Window Open</h4>
+                        <p class="text-sm text-slate-500 mt-1">Students who missed the initial deadline can now register with a penalty fee until Friday.</p>
+                        <p class="text-xs text-slate-400 mt-2">Posted Yesterday</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

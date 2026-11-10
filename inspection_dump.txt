@@ -1,0 +1,1659 @@
+﻿=== PHASE A INSPECTION DUMP START ===
+
+--- FILE: 00_summary.txt ---
+PHASE A INSPECTION REPORT
+Generated: 2026-11-09 08:47:26
+Project root: C:\Users\User\Desktop\academic_management_system
+
+[FILE COLLECTION]
+
+[DJANGO APP DETECTION]
+
+[CORE CONFIGURATION]
+
+[APPLICATION CODE FILES]
+
+[TEMPLATES]
+
+[STATIC JAVASCRIPT]
+
+[MIGRATIONS]
+
+[TARGETED SEARCHES]
+
+[DJANGO DIAGNOSTICS]
+
+[DEPENDENCIES]
+
+[SUMMARY COUNTS]
+
+Python files: 107
+HTML templates: 24
+JavaScript files: 0
+Migration files: 7
+Detected local apps: academics, accounts, analytics, approvals, audit, courses, institution, registration, results, staff, students, transcripts
+
+--- FILE: 02_local_apps.txt ---
+academics
+accounts
+analytics
+approvals
+audit
+courses
+institution
+registration
+results
+staff
+students
+transcripts
+
+--- FILE: 21_django_diagnostics.txt ---
+=== python --version ===
+Python 3.12.10
+
+=== pip --version ===
+pip 25.0.1 from C:\Users\User\Desktop\academic_management_system\venv\Lib\site-packages\pip (python 3.12)
+
+=== manage.py check ===
+System check identified no issues (0 silenced).
+
+=== manage.py showmigrations ===
+academics
+ [X] 0001_initial
+ [X] 0002_alter_academicsession_options_alter_semester_options_and_more
+accounts
+ [X] 0001_initial
+admin
+ [X] 0001_initial
+ [X] 0002_logentry_remove_auto_add
+ [X] 0003_logentry_add_action_flag_choices
+analytics
+ (no migrations)
+approvals
+ (no migrations)
+audit
+ (no migrations)
+auth
+ [X] 0001_initial
+ [X] 0002_alter_permission_name_max_length
+ [X] 0003_alter_user_email_max_length
+ [X] 0004_alter_user_username_opts
+ [X] 0005_alter_user_last_login_null
+ [X] 0006_require_contenttypes_0002
+ [X] 0007_alter_validators_add_error_messages
+ [X] 0008_alter_user_username_max_length
+ [X] 0009_alter_user_last_name_max_length
+ [X] 0010_alter_group_name_max_length
+ [X] 0011_update_proxy_permissions
+ [X] 0012_alter_user_first_name_max_length
+contenttypes
+ [X] 0001_initial
+ [X] 0002_remove_content_type_name
+courses
+ [X] 0001_initial
+institution
+ [X] 0001_initial
+registration
+ (no migrations)
+results
+ (no migrations)
+sessions
+ [X] 0001_initial
+staff
+ [X] 0001_initial
+students
+ [X] 0001_initial
+transcripts
+ (no migrations)
+
+=== manage.py makemigrations --dry-run --verbosity 3 ===
+No changes detected
+
+--- FILE: 15_templates_list.txt ---
+templates\accounts\dashboard.html
+templates\accounts\login.html
+templates\base.html
+templates\courses\assignment_form.html
+templates\courses\assignment_list.html
+templates\courses\course_form.html
+templates\courses\course_list.html
+templates\courses\offering_form.html
+templates\courses\offering_list.html
+templates\courses\section_form.html
+templates\courses\section_list.html
+templates\management\base.html
+templates\management\confirm_delete.html
+templates\management\dashboard.html
+templates\management\department_form.html
+templates\management\department_list.html
+templates\management\faculty_form.html
+templates\management\faculty_list.html
+templates\management\programme_form.html
+templates\management\programme_list.html
+templates\staff\staff_create.html
+templates\staff\staff_list.html
+templates\students\student_clearance.html
+templates\students\student_list.html
+
+--- MODELS CONTENT ---
+
+>>> FILE: academics_models.py >>>
+from django.db import models
+
+class AcademicSession(models.Model):
+    name = models.CharField(max_length=20, unique=True, help_text="e.g., 2023/2024")
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    is_active = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-name']
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if self.is_active:
+            AcademicSession.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
+        super().save(*args, **kwargs)
+
+class Semester(models.Model):
+    SEMESTER_CHOICES = [
+        ('FIRST', 'First Semester'),
+        ('SECOND', 'Second Semester'),
+    ]
+    name = models.CharField(max_length=20, choices=SEMESTER_CHOICES)
+    session = models.ForeignKey(AcademicSession, on_delete=models.CASCADE, related_name='semesters')
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    is_active = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('session', 'name')
+        ordering = ['-session__name', 'name']
+
+    def __str__(self):
+        return f"{self.get_name_display()} - {self.session.name}"
+
+    def save(self, *args, **kwargs):
+        if self.is_active:
+            Semester.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
+        super().save(*args, **kwargs)
+
+>>> FILE: accounts_models.py >>>
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.db import models
+from django.utils import timezone
+
+class CustomUserManager(BaseUserManager):
+    def create_user(self, username, password=None, **extra_fields):
+        if not username:
+            raise ValueError('The Username field must be set')
+        user = self.model(username=username, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, username, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        return self.create_user(username, password, **extra_fields)
+
+class User(AbstractBaseUser, PermissionsMixin):
+    username = models.CharField(max_length=150, unique=True)
+    email = models.EmailField(unique=True)
+    first_name = models.CharField(max_length=150)
+    last_name = models.CharField(max_length=150)
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+    is_management = models.BooleanField(default=False, help_text="Designates whether the user can access the custom management dashboard.")
+    date_joined = models.DateTimeField(default=timezone.now)
+
+    objects = CustomUserManager()
+
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email', 'first_name', 'last_name']
+
+    class Meta:
+        verbose_name = 'User'
+        verbose_name_plural = 'Users'
+
+    def __str__(self):
+        return self.username
+
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
+    def get_short_name(self):
+        return self.username
+
+>>> FILE: analytics_models.py >>>
+from django.db import models
+
+# Create your models here.
+
+>>> FILE: approvals_models.py >>>
+from django.db import models
+
+# Create your models here.
+
+>>> FILE: audit_models.py >>>
+from django.db import models
+
+# Create your models here.
+
+>>> FILE: courses_models.py >>>
+from django.db import models
+
+class Course(models.Model):
+    code = models.CharField(max_length=20)
+    title = models.CharField(max_length=200)
+    department = models.ForeignKey('institution.Department', on_delete=models.CASCADE, related_name='courses')
+    programme = models.ForeignKey('institution.Programme', on_delete=models.CASCADE, related_name='courses', null=True, blank=True, help_text="Leave blank if applicable to all programmes in the department.")
+    level = models.IntegerField(help_text="e.g., 100, 200, 300")
+    semester = models.CharField(max_length=10, choices=[('FIRST', 'First Semester'), ('SECOND', 'Second Semester')])
+    credit_units = models.IntegerField()
+    is_compulsory = models.BooleanField(default=True)
+    prerequisites = models.ManyToManyField('self', symmetrical=False, blank=True)
+
+    class Meta:
+        unique_together = ('code', 'department', 'level')
+        ordering = ['code']
+
+    def __str__(self):
+        return f"{self.code} - {self.title}"
+
+class CourseOffering(models.Model):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='offerings')
+    session = models.ForeignKey('academics.AcademicSession', on_delete=models.CASCADE, related_name='offerings')
+    semester_type = models.CharField(max_length=10, choices=[('FIRST', 'First Semester'), ('SECOND', 'Second Semester')])
+    level = models.IntegerField()
+
+    class Meta:
+        unique_together = ('course', 'session', 'semester_type', 'level')
+        ordering = ['session__name', 'course__code']
+
+    def __str__(self):
+        return f"{self.course.code} ({self.session.name} - {self.semester_type})"
+
+class Section(models.Model):
+    offering = models.ForeignKey(CourseOffering, on_delete=models.CASCADE, related_name='sections')
+    name = models.CharField(max_length=10, help_text="e.g., A, B, Default")
+    is_default = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('offering', 'name')
+
+    def __str__(self):
+        return f"{self.offering.course.code} - Section {self.name}"
+
+class LecturerAssignment(models.Model):
+    offering = models.ForeignKey(CourseOffering, on_delete=models.CASCADE, related_name='assignments')
+    section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='assignments')
+    lecturer = models.ForeignKey('staff.StaffProfile', on_delete=models.CASCADE, related_name='assignments')
+
+    class Meta:
+        unique_together = ('offering', 'section', 'lecturer')
+
+    def __str__(self):
+        return f"{self.lecturer.user.get_full_name()} -> {self.section}"
+
+>>> FILE: institution_models.py >>>
+from django.db import models
+
+class Faculty(models.Model):
+    name = models.CharField(max_length=200, unique=True)
+    code = models.CharField(max_length=20, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+class Department(models.Model):
+    name = models.CharField(max_length=200)
+    code = models.CharField(max_length=20)
+    faculty = models.ForeignKey(Faculty, on_delete=models.CASCADE, related_name='departments')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('faculty', 'code')
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.name} - {self.faculty.name}"
+
+class Programme(models.Model):
+    name = models.CharField(max_length=200)
+    code = models.CharField(max_length=20)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='programmes')
+    max_level = models.IntegerField(help_text="Maximum academic level (e.g., 400, 500, 600)")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('department', 'code')
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+>>> FILE: registration_models.py >>>
+from django.db import models
+
+# Create your models here.
+
+>>> FILE: results_models.py >>>
+from django.db import models
+
+# Create your models here.
+
+>>> FILE: staff_models.py >>>
+from django.db import models
+from django.conf import settings
+from django.utils import timezone
+
+class StaffProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='staff_profile')
+    staff_id = models.CharField(max_length=50, unique=True)
+    department = models.ForeignKey('institution.Department', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.get_full_name()} ({self.staff_id})"
+
+class Appointment(models.Model):
+    ROLE_CHOICES = [
+        ('LECTURER', 'Lecturer'),
+        ('HOD', 'Head of Department'),
+        ('DEAN', 'Dean'),
+        ('VC', 'Vice Chancellor'),
+        ('EXAMS_RECORDS', 'Exams and Records'),
+    ]
+
+    staff = models.ForeignKey(StaffProfile, on_delete=models.CASCADE, related_name='appointments')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    faculty = models.ForeignKey('institution.Faculty', on_delete=models.CASCADE, null=True, blank=True, help_text="Required for Dean")
+    department = models.ForeignKey('institution.Department', on_delete=models.CASCADE, null=True, blank=True, help_text="Required for HOD")
+    
+    start_date = models.DateField()
+    end_date = models.DateField()
+    is_active = models.BooleanField(default=True)
+    
+    appointed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='made_appointments')
+    revocation_reason = models.TextField(blank=True, null=True)
+    revoked_at = models.DateTimeField(null=True, blank=True)
+    revoked_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='revoked_appointments')
+
+    class Meta:
+        ordering = ['-start_date']
+
+    def __str__(self):
+        return f"{self.staff.user.get_full_name()} - {self.get_role_display()}"
+
+    @property
+    def is_currently_valid(self):
+        today = timezone.now().date()
+        return self.is_active and self.start_date <= today <= self.end_date
+
+>>> FILE: students_models.py >>>
+from django.db import models
+from django.conf import settings
+
+class StudentProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='student_profile')
+    matric_number = models.CharField(max_length=50, unique=True)
+    department = models.ForeignKey('institution.Department', on_delete=models.SET_NULL, null=True)
+    programme = models.ForeignKey('institution.Programme', on_delete=models.SET_NULL, null=True)
+    current_level = models.IntegerField(help_text="e.g., 100, 200, 300")
+    admission_session = models.CharField(max_length=20, help_text="e.g., 2023/2024")
+    phone = models.CharField(max_length=20, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['matric_number']
+
+    def __str__(self):
+        return f"{self.matric_number} - {self.user.get_full_name()}"
+
+    @staticmethod
+    def generate_matric_number(admission_year):
+        """Generate matric number in format U/YYYY/NNNNN"""
+        last_student = StudentProfile.objects.filter(
+            admission_session__startswith=str(admission_year)
+        ).order_by('-matric_number').first()
+        
+        if last_student:
+            last_num = int(last_student.matric_number.split('/')[-1])
+            next_num = last_num + 1
+        else:
+            next_num = 1
+        
+        return f"U/{admission_year}/{next_num:05d}"
+
+>>> FILE: transcripts_models.py >>>
+from django.db import models
+
+# Create your models here.
+
+--- VIEWS CONTENT ---
+
+>>> FILE: academics_views.py >>>
+from django.shortcuts import render
+
+# Create your views here.
+
+>>> FILE: accounts_views.py >>>
+from django.shortcuts import render, redirect
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from .forms import CustomLoginForm
+
+def login_view(request):
+    if request.user.is_authenticated:
+        return route_user(request.user)
+        
+    if request.method == 'POST':
+        form = CustomLoginForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            return route_user(user)
+        else:
+            messages.error(request, "Invalid username or password.")
+    else:
+        form = CustomLoginForm()
+    return render(request, 'accounts/login.html', {'form': form})
+
+def route_user(user):
+    """Routes users to their specific dashboards based on their roles."""
+    if user.is_management:
+        return redirect('institution:dashboard')
+    if hasattr(user, 'student_profile'):
+        # We will build this in Phase 5, for now redirect to a safe place
+        return redirect('accounts:generic_dashboard')
+    return redirect('accounts:generic_dashboard')
+
+def logout_view(request):
+    logout(request)
+    return redirect('accounts:login')
+
+@login_required
+def generic_dashboard_view(request):
+    """Fallback dashboard for users without specific roles."""
+    return render(request, 'accounts/dashboard.html')
+
+>>> FILE: analytics_views.py >>>
+from django.shortcuts import render
+
+# Create your views here.
+
+>>> FILE: approvals_views.py >>>
+from django.shortcuts import render
+
+# Create your views here.
+
+>>> FILE: audit_views.py >>>
+from django.shortcuts import render
+
+# Create your views here.
+
+>>> FILE: courses_views.py >>>
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib import messages
+from .models import Course, CourseOffering, Section, LecturerAssignment
+from .forms import CourseForm, CourseOfferingForm, SectionForm, LecturerAssignmentForm
+
+def management_required(view_func):
+    @login_required
+    @user_passes_test(lambda u: u.is_management)
+    def wrapper(request, *args, **kwargs):
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+# Course Catalogue CRUD
+@management_required
+def course_list(request):
+    courses = Course.objects.select_related('department', 'programme').all()
+    return render(request, 'courses/course_list.html', {'courses': courses})
+
+@management_required
+def course_create(request):
+    if request.method == 'POST':
+        form = CourseForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Course created successfully.")
+            return redirect('courses:course_list')
+    else:
+        form = CourseForm()
+    return render(request, 'courses/course_form.html', {'form': form, 'title': 'Create Course'})
+
+@management_required
+def course_edit(request, pk):
+    course = get_object_or_404(Course, pk=pk)
+    if request.method == 'POST':
+        form = CourseForm(request.POST, instance=course)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Course updated successfully.")
+            return redirect('courses:course_list')
+    else:
+        form = CourseForm(instance=course)
+    return render(request, 'courses/course_form.html', {'form': form, 'title': 'Edit Course'})
+
+@management_required
+def course_delete(request, pk):
+    course = get_object_or_404(Course, pk=pk)
+    if request.method == 'POST':
+        course.delete()
+        messages.success(request, "Course deleted successfully.")
+        return redirect('courses:course_list')
+    return render(request, 'management/confirm_delete.html', {'object': course, 'url_name': 'courses:course_list'})
+
+# Course Offering CRUD
+@management_required
+def offering_list(request):
+    offerings = CourseOffering.objects.select_related('course', 'session').all()
+    return render(request, 'courses/offering_list.html', {'offerings': offerings})
+
+@management_required
+def offering_create(request):
+    if request.method == 'POST':
+        form = CourseOfferingForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Course offering created successfully.")
+            return redirect('courses:offering_list')
+    else:
+        form = CourseOfferingForm()
+    return render(request, 'courses/offering_form.html', {'form': form, 'title': 'Create Course Offering'})
+
+@management_required
+def offering_edit(request, pk):
+    offering = get_object_or_404(CourseOffering, pk=pk)
+    if request.method == 'POST':
+        form = CourseOfferingForm(request.POST, instance=offering)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Course offering updated successfully.")
+            return redirect('courses:offering_list')
+    else:
+        form = CourseOfferingForm(instance=offering)
+    return render(request, 'courses/offering_form.html', {'form': form, 'title': 'Edit Course Offering'})
+
+@management_required
+def offering_delete(request, pk):
+    offering = get_object_or_404(CourseOffering, pk=pk)
+    if request.method == 'POST':
+        offering.delete()
+        messages.success(request, "Course offering deleted successfully.")
+        return redirect('courses:offering_list')
+    return render(request, 'management/confirm_delete.html', {'object': offering, 'url_name': 'courses:offering_list'})
+
+# Section CRUD
+@management_required
+def section_list(request):
+    sections = Section.objects.select_related('offering__course').all()
+    return render(request, 'courses/section_list.html', {'sections': sections})
+
+@management_required
+def section_create(request):
+    if request.method == 'POST':
+        form = SectionForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Section created successfully.")
+            return redirect('courses:section_list')
+    else:
+        form = SectionForm()
+    return render(request, 'courses/section_form.html', {'form': form, 'title': 'Create Section'})
+
+@management_required
+def section_edit(request, pk):
+    section = get_object_or_404(Section, pk=pk)
+    if request.method == 'POST':
+        form = SectionForm(request.POST, instance=section)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Section updated successfully.")
+            return redirect('courses:section_list')
+    else:
+        form = SectionForm(instance=section)
+    return render(request, 'courses/section_form.html', {'form': form, 'title': 'Edit Section'})
+
+@management_required
+def section_delete(request, pk):
+    section = get_object_or_404(Section, pk=pk)
+    if request.method == 'POST':
+        section.delete()
+        messages.success(request, "Section deleted successfully.")
+        return redirect('courses:section_list')
+    return render(request, 'management/confirm_delete.html', {'object': section, 'url_name': 'courses:section_list'})
+
+# Lecturer Assignment CRUD
+@management_required
+def assignment_list(request):
+    assignments = LecturerAssignment.objects.select_related('offering__course', 'section', 'lecturer__user').all()
+    return render(request, 'courses/assignment_list.html', {'assignments': assignments})
+
+@management_required
+def assignment_create(request):
+    if request.method == 'POST':
+        form = LecturerAssignmentForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Lecturer assigned successfully.")
+            return redirect('courses:assignment_list')
+    else:
+        form = LecturerAssignmentForm()
+    return render(request, 'courses/assignment_form.html', {'form': form, 'title': 'Assign Lecturer'})
+
+@management_required
+def assignment_edit(request, pk):
+    assignment = get_object_or_404(LecturerAssignment, pk=pk)
+    if request.method == 'POST':
+        form = LecturerAssignmentForm(request.POST, instance=assignment)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Lecturer assignment updated successfully.")
+            return redirect('courses:assignment_list')
+    else:
+        form = LecturerAssignmentForm(instance=assignment)
+    return render(request, 'courses/assignment_form.html', {'form': form, 'title': 'Edit Lecturer Assignment'})
+
+@management_required
+def assignment_delete(request, pk):
+    assignment = get_object_or_404(LecturerAssignment, pk=pk)
+    if request.method == 'POST':
+        assignment.delete()
+        messages.success(request, "Lecturer assignment removed successfully.")
+        return redirect('courses:assignment_list')
+    return render(request, 'management/confirm_delete.html', {'object': assignment, 'url_name': 'courses:assignment_list'})
+
+>>> FILE: institution_views.py >>>
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib import messages
+from django.db.models import Count
+from .models import Faculty, Department, Programme
+from .forms import FacultyForm, DepartmentForm, ProgrammeForm
+from accounts.models import User
+from students.models import StudentProfile
+from staff.models import StaffProfile
+from academics.models import AcademicSession, Semester
+
+def management_required(view_func):
+    @login_required
+    @user_passes_test(lambda u: u.is_management)
+    def wrapper(request, *args, **kwargs):
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+@management_required
+def management_dashboard(request):
+    context = {
+        'total_students': StudentProfile.objects.count(),
+        'total_staff': StaffProfile.objects.count(),
+        'total_faculties': Faculty.objects.count(),
+        'total_departments': Department.objects.count(),
+        'total_programmes': Programme.objects.count(),
+        'active_session': AcademicSession.objects.filter(is_active=True).first(),
+        'active_semester': Semester.objects.filter(is_active=True).first(),
+    }
+    return render(request, 'management/dashboard.html', context)
+
+# Faculty CRUD
+@management_required
+def faculty_list(request):
+    faculties = Faculty.objects.annotate(dept_count=Count('departments'))
+    return render(request, 'management/faculty_list.html', {'faculties': faculties})
+
+@management_required
+def faculty_create(request):
+    if request.method == 'POST':
+        form = FacultyForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Faculty created successfully.")
+            return redirect('institution:faculty_list')
+    else:
+        form = FacultyForm()
+    return render(request, 'management/faculty_form.html', {'form': form, 'title': 'Create Faculty'})
+
+@management_required
+def faculty_edit(request, pk):
+    faculty = get_object_or_404(Faculty, pk=pk)
+    if request.method == 'POST':
+        form = FacultyForm(request.POST, instance=faculty)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Faculty updated successfully.")
+            return redirect('institution:faculty_list')
+    else:
+        form = FacultyForm(instance=faculty)
+    return render(request, 'management/faculty_form.html', {'form': form, 'title': 'Edit Faculty'})
+
+@management_required
+def faculty_delete(request, pk):
+    faculty = get_object_or_404(Faculty, pk=pk)
+    if request.method == 'POST':
+        faculty.delete()
+        messages.success(request, "Faculty deleted successfully.")
+        return redirect('institution:faculty_list')
+    return render(request, 'management/confirm_delete.html', {'object': faculty, 'url_name': 'institution:faculty_list'})
+
+# Department CRUD
+@management_required
+def department_list(request):
+    departments = Department.objects.select_related('faculty').all()
+    return render(request, 'management/department_list.html', {'departments': departments})
+
+@management_required
+def department_create(request):
+    if request.method == 'POST':
+        form = DepartmentForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Department created successfully.")
+            return redirect('institution:department_list')
+    else:
+        form = DepartmentForm()
+    return render(request, 'management/department_form.html', {'form': form, 'title': 'Create Department'})
+
+@management_required
+def department_edit(request, pk):
+    department = get_object_or_404(Department, pk=pk)
+    if request.method == 'POST':
+        form = DepartmentForm(request.POST, instance=department)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Department updated successfully.")
+            return redirect('institution:department_list')
+    else:
+        form = DepartmentForm(instance=department)
+    return render(request, 'management/department_form.html', {'form': form, 'title': 'Edit Department'})
+
+@management_required
+def department_delete(request, pk):
+    department = get_object_or_404(Department, pk=pk)
+    if request.method == 'POST':
+        department.delete()
+        messages.success(request, "Department deleted successfully.")
+        return redirect('institution:department_list')
+    return render(request, 'management/confirm_delete.html', {'object': department, 'url_name': 'institution:department_list'})
+
+# Programme CRUD
+@management_required
+def programme_list(request):
+    programmes = Programme.objects.select_related('department', 'department__faculty').all()
+    return render(request, 'management/programme_list.html', {'programmes': programmes})
+
+@management_required
+def programme_create(request):
+    if request.method == 'POST':
+        form = ProgrammeForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Programme created successfully.")
+            return redirect('institution:programme_list')
+    else:
+        form = ProgrammeForm()
+    return render(request, 'management/programme_form.html', {'form': form, 'title': 'Create Programme'})
+
+@management_required
+def programme_edit(request, pk):
+    programme = get_object_or_404(Programme, pk=pk)
+    if request.method == 'POST':
+        form = ProgrammeForm(request.POST, instance=programme)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Programme updated successfully.")
+            return redirect('institution:programme_list')
+    else:
+        form = ProgrammeForm(instance=programme)
+    return render(request, 'management/programme_form.html', {'form': form, 'title': 'Edit Programme'})
+
+@management_required
+def programme_delete(request, pk):
+    programme = get_object_or_404(Programme, pk=pk)
+    if request.method == 'POST':
+        programme.delete()
+        messages.success(request, "Programme deleted successfully.")
+        return redirect('institution:programme_list')
+    return render(request, 'management/confirm_delete.html', {'object': programme, 'url_name': 'institution:programme_list'})
+
+
+>>> FILE: registration_views.py >>>
+from django.shortcuts import render
+
+# Create your views here.
+
+>>> FILE: results_views.py >>>
+from django.shortcuts import render
+
+# Create your views here.
+
+>>> FILE: staff_views.py >>>
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib import messages
+from accounts.models import User
+from .models import StaffProfile
+from .forms import StaffCreationForm
+
+def management_required(view_func):
+    @login_required
+    @user_passes_test(lambda u: u.is_management)
+    def wrapper(request, *args, **kwargs):
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+@management_required
+def staff_create(request):
+    if request.method == 'POST':
+        form = StaffCreationForm(request.POST)
+        if form.is_valid():
+            user = User.objects.create_user(
+                username=form.cleaned_data['username'],
+                email=form.cleaned_data['email'],
+                password=form.cleaned_data['password'],
+                first_name=form.cleaned_data['first_name'],
+                last_name=form.cleaned_data['last_name']
+            )
+            
+            StaffProfile.objects.create(
+                user=user,
+                staff_id=form.cleaned_data['staff_id'],
+                department=form.cleaned_data['department']
+            )
+            
+            messages.success(request, f"Staff account created successfully! Username: {user.username}")
+            return redirect('staff:staff_list')
+    else:
+        form = StaffCreationForm()
+    
+    return render(request, 'staff/staff_create.html', {'form': form})
+
+@management_required
+def staff_list(request):
+    staff = StaffProfile.objects.select_related('user', 'department').all()
+    return render(request, 'staff/staff_list.html', {'staff': staff})
+
+>>> FILE: students_views.py >>>
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib import messages
+from accounts.models import User
+from .models import StudentProfile
+from .forms import StudentClearanceForm
+
+def management_required(view_func):
+    @login_required
+    @user_passes_test(lambda u: u.is_management)
+    def wrapper(request, *args, **kwargs):
+        return view_func(request, *args, **kwargs)
+    return wrapper
+
+@management_required
+def student_clearance(request):
+    if request.method == 'POST':
+        form = StudentClearanceForm(request.POST)
+        if form.is_valid():
+            # Generate matric number
+            admission_year = form.cleaned_data['admission_session'].split('/')[0]
+            matric_number = StudentProfile.generate_matric_number(admission_year)
+            
+            # Create user account
+            username = matric_number.replace('/', '_').lower()
+            user = User.objects.create_user(
+                username=username,
+                email=form.cleaned_data['email'],
+                password=form.cleaned_data['password'],
+                first_name=form.cleaned_data['first_name'],
+                last_name=form.cleaned_data['last_name']
+            )
+            
+            # Create student profile
+            StudentProfile.objects.create(
+                user=user,
+                matric_number=matric_number,
+                department=form.cleaned_data['department'],
+                programme=form.cleaned_data['programme'],
+                current_level=form.cleaned_data['current_level'],
+                admission_session=form.cleaned_data['admission_session'],
+                phone=form.cleaned_data['phone']
+            )
+            
+            messages.success(request, f"Student cleared successfully! Matric Number: {matric_number}, Username: {username}")
+            return redirect('students:student_list')
+    else:
+        form = StudentClearanceForm()
+    
+    return render(request, 'students/student_clearance.html', {'form': form})
+
+@management_required
+def student_list(request):
+    students = StudentProfile.objects.select_related('user', 'department', 'programme').all()
+    return render(request, 'students/student_list.html', {'students': students})
+
+>>> FILE: transcripts_views.py >>>
+from django.shortcuts import render
+
+# Create your views here.
+
+--- URLS CONTENT ---
+
+>>> FILE: accounts_urls.py >>>
+from django.urls import path
+from . import views
+
+app_name = 'accounts'
+
+urlpatterns = [
+    path('', views.login_view, name='login'),
+    path('login/', views.login_view, name='login'),
+    path('logout/', views.logout_view, name='logout'),
+    path('dashboard/', views.generic_dashboard_view, name='generic_dashboard'),
+]
+
+>>> FILE: core_urls.py >>>
+from django.contrib import admin
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', include('accounts.urls')),
+    path('management/', include('institution.urls')),
+    path('management/', include('courses.urls')),
+    path('management/', include('students.urls')),
+    path('management/', include('staff.urls')),
+]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+>>> FILE: courses_urls.py >>>
+from django.urls import path
+from . import views
+
+app_name = 'courses'
+
+urlpatterns = [
+    # Courses
+    path('courses/', views.course_list, name='course_list'),
+    path('courses/create/', views.course_create, name='course_create'),
+    path('courses/<int:pk>/edit/', views.course_edit, name='course_edit'),
+    path('courses/<int:pk>/delete/', views.course_delete, name='course_delete'),
+    
+    # Offerings
+    path('offerings/', views.offering_list, name='offering_list'),
+    path('offerings/create/', views.offering_create, name='offering_create'),
+    path('offerings/<int:pk>/edit/', views.offering_edit, name='offering_edit'),
+    path('offerings/<int:pk>/delete/', views.offering_delete, name='offering_delete'),
+    
+    # Sections
+    path('sections/', views.section_list, name='section_list'),
+    path('sections/create/', views.section_create, name='section_create'),
+    path('sections/<int:pk>/edit/', views.section_edit, name='section_edit'),
+    path('sections/<int:pk>/delete/', views.section_delete, name='section_delete'),
+    
+    # Assignments
+    path('assignments/', views.assignment_list, name='assignment_list'),
+    path('assignments/create/', views.assignment_create, name='assignment_create'),
+    path('assignments/<int:pk>/edit/', views.assignment_edit, name='assignment_edit'),
+    path('assignments/<int:pk>/delete/', views.assignment_delete, name='assignment_delete'),
+]
+
+>>> FILE: institution_urls.py >>>
+from django.urls import path
+from . import views
+
+app_name = 'institution'
+
+urlpatterns = [
+    path('dashboard/', views.management_dashboard, name='dashboard'),
+    
+    # Faculty
+    path('faculties/', views.faculty_list, name='faculty_list'),
+    path('faculties/create/', views.faculty_create, name='faculty_create'),
+    path('faculties/<int:pk>/edit/', views.faculty_edit, name='faculty_edit'),
+    path('faculties/<int:pk>/delete/', views.faculty_delete, name='faculty_delete'),
+    
+    # Department
+    path('departments/', views.department_list, name='department_list'),
+    path('departments/create/', views.department_create, name='department_create'),
+    path('departments/<int:pk>/edit/', views.department_edit, name='department_edit'),
+    path('departments/<int:pk>/delete/', views.department_delete, name='department_delete'),
+    
+    # Programme
+    path('programmes/', views.programme_list, name='programme_list'),
+    path('programmes/create/', views.programme_create, name='programme_create'),
+    path('programmes/<int:pk>/edit/', views.programme_edit, name='programme_edit'),
+    path('programmes/<int:pk>/delete/', views.programme_delete, name='programme_delete'),
+]
+
+>>> FILE: staff_urls.py >>>
+from django.urls import path
+from . import views
+
+app_name = 'staff'
+
+urlpatterns = [
+    path('create/', views.staff_create, name='staff_create'),
+    path('list/', views.staff_list, name='staff_list'),
+]
+
+>>> FILE: students_urls.py >>>
+from django.urls import path
+from . import views
+
+app_name = 'students'
+
+urlpatterns = [
+    path('clearance/', views.student_clearance, name='student_clearance'),
+    path('list/', views.student_list, name='student_list'),
+]
+
+--- TARGETED SEARCH RESULTS ---
+
+>>> FILE: 15_search_approval_roles.txt >>>
+academics\models.py:13: return self.name
+academics\models.py:36: return f"{self.get_name_display()} - {self.session.name}"
+accounts\models.py:12: return user
+accounts\models.py:17: return self.create_user(username, password, **extra_fields)
+accounts\models.py:39: return self.username
+accounts\models.py:42: return f"{self.first_name} {self.last_name}"
+accounts\models.py:45: return self.username
+accounts\views.py:9: return route_user(request.user)
+accounts\views.py:11: if request.method == 'POST':
+accounts\views.py:16: return route_user(user)
+accounts\views.py:21: return render(request, 'accounts/login.html', {'form': form})
+accounts\views.py:26: return redirect('institution:dashboard')
+accounts\views.py:29: return redirect('accounts:generic_dashboard')
+accounts\views.py:30: return redirect('accounts:generic_dashboard')
+accounts\views.py:34: return redirect('accounts:login')
+accounts\views.py:39: return render(request, 'accounts/dashboard.html')
+approvals\apps.py:4: class ApprovalsConfig(AppConfig):
+approvals\apps.py:5: name = 'approvals'
+core\settings.py:31: 'approvals',
+courses\forms.py:45: return self.cleaned_data['session_name'].strip()
+courses\forms.py:60: return instance
+courses\models.py:19: return f"{self.code} - {self.title}"
+courses\models.py:32: return f"{self.course.code} ({self.session.name} - {self.semester_type})"
+courses\models.py:43: return f"{self.offering.course.code} - Section {self.name}"
+courses\models.py:54: return f"{self.lecturer.user.get_full_name()} -> {self.section}"
+courses\views.py:11: return view_func(request, *args, **kwargs)
+courses\views.py:12: return wrapper
+courses\views.py:18: return render(request, 'courses/course_list.html', {'courses': courses})
+courses\views.py:22: if request.method == 'POST':
+courses\views.py:27: return redirect('courses:course_list')
+courses\views.py:30: return render(request, 'courses/course_form.html', {'form': form, 'title': 'Create Course'})
+courses\views.py:35: if request.method == 'POST':
+courses\views.py:40: return redirect('courses:course_list')
+courses\views.py:43: return render(request, 'courses/course_form.html', {'form': form, 'title': 'Edit Course'})
+courses\views.py:48: if request.method == 'POST':
+courses\views.py:51: return redirect('courses:course_list')
+courses\views.py:52: return render(request, 'management/confirm_delete.html', {'object': course, 'url_name': 'courses:course_list'})
+courses\views.py:58: return render(request, 'courses/offering_list.html', {'offerings': offerings})
+courses\views.py:62: if request.method == 'POST':
+courses\views.py:67: return redirect('courses:offering_list')
+courses\views.py:70: return render(request, 'courses/offering_form.html', {'form': form, 'title': 'Create Course Offering'})
+courses\views.py:75: if request.method == 'POST':
+courses\views.py:80: return redirect('courses:offering_list')
+courses\views.py:83: return render(request, 'courses/offering_form.html', {'form': form, 'title': 'Edit Course Offering'})
+courses\views.py:88: if request.method == 'POST':
+courses\views.py:91: return redirect('courses:offering_list')
+courses\views.py:92: return render(request, 'management/confirm_delete.html', {'object': offering, 'url_name': 'courses:offering_list'})
+courses\views.py:98: return render(request, 'courses/section_list.html', {'sections': sections})
+courses\views.py:102: if request.method == 'POST':
+courses\views.py:107: return redirect('courses:section_list')
+courses\views.py:110: return render(request, 'courses/section_form.html', {'form': form, 'title': 'Create Section'})
+courses\views.py:115: if request.method == 'POST':
+courses\views.py:120: return redirect('courses:section_list')
+courses\views.py:123: return render(request, 'courses/section_form.html', {'form': form, 'title': 'Edit Section'})
+courses\views.py:128: if request.method == 'POST':
+courses\views.py:131: return redirect('courses:section_list')
+courses\views.py:132: return render(request, 'management/confirm_delete.html', {'object': section, 'url_name': 'courses:section_list'})
+courses\views.py:138: return render(request, 'courses/assignment_list.html', {'assignments': assignments})
+courses\views.py:142: if request.method == 'POST':
+courses\views.py:147: return redirect('courses:assignment_list')
+courses\views.py:150: return render(request, 'courses/assignment_form.html', {'form': form, 'title': 'Assign Lecturer'})
+courses\views.py:155: if request.method == 'POST':
+courses\views.py:160: return redirect('courses:assignment_list')
+courses\views.py:163: return render(request, 'courses/assignment_form.html', {'form': form, 'title': 'Edit Lecturer Assignment'})
+courses\views.py:168: if request.method == 'POST':
+courses\views.py:171: return redirect('courses:assignment_list')
+courses\views.py:172: return render(request, 'management/confirm_delete.html', {'object': assignment, 'url_name': 'courses:assignment_list'})
+institution\models.py:12: return f"{self.name} ({self.code})"
+institution\models.py:25: return f"{self.name} - {self.faculty.name}"
+institution\models.py:38: return f"{self.name} ({self.code})"
+institution\views.py:16: return view_func(request, *args, **kwargs)
+institution\views.py:17: return wrapper
+institution\views.py:30: return render(request, 'management/dashboard.html', context)
+institution\views.py:36: return render(request, 'management/faculty_list.html', {'faculties': faculties})
+institution\views.py:40: if request.method == 'POST':
+institution\views.py:45: return redirect('institution:faculty_list')
+institution\views.py:48: return render(request, 'management/faculty_form.html', {'form': form, 'title': 'Create Faculty'})
+institution\views.py:53: if request.method == 'POST':
+institution\views.py:58: return redirect('institution:faculty_list')
+institution\views.py:61: return render(request, 'management/faculty_form.html', {'form': form, 'title': 'Edit Faculty'})
+institution\views.py:66: if request.method == 'POST':
+institution\views.py:69: return redirect('institution:faculty_list')
+institution\views.py:70: return render(request, 'management/confirm_delete.html', {'object': faculty, 'url_name': 'institution:faculty_list'})
+institution\views.py:76: return render(request, 'management/department_list.html', {'departments': departments})
+institution\views.py:80: if request.method == 'POST':
+institution\views.py:85: return redirect('institution:department_list')
+institution\views.py:88: return render(request, 'management/department_form.html', {'form': form, 'title': 'Create Department'})
+institution\views.py:93: if request.method == 'POST':
+institution\views.py:98: return redirect('institution:department_list')
+institution\views.py:101: return render(request, 'management/department_form.html', {'form': form, 'title': 'Edit Department'})
+institution\views.py:106: if request.method == 'POST':
+institution\views.py:109: return redirect('institution:department_list')
+institution\views.py:110: return render(request, 'management/confirm_delete.html', {'object': department, 'url_name': 'institution:department_list'})
+institution\views.py:116: return render(request, 'management/programme_list.html', {'programmes': programmes})
+institution\views.py:120: if request.method == 'POST':
+institution\views.py:125: return redirect('institution:programme_list')
+institution\views.py:128: return render(request, 'management/programme_form.html', {'form': form, 'title': 'Create Programme'})
+institution\views.py:133: if request.method == 'POST':
+institution\views.py:138: return redirect('institution:programme_list')
+institution\views.py:141: return render(request, 'management/programme_form.html', {'form': form, 'title': 'Edit Programme'})
+institution\views.py:146: if request.method == 'POST':
+institution\views.py:149: return redirect('institution:programme_list')
+institution\views.py:150: return render(request, 'management/confirm_delete.html', {'object': programme, 'url_name': 'institution:programme_list'})
+staff\forms.py:18: return username
+staff\forms.py:24: return email
+staff\models.py:12: return f"{self.user.get_full_name()} ({self.staff_id})"
+staff\models.py:17: ('HOD', 'Head of Department'),
+staff\models.py:18: ('DEAN', 'Dean'),
+staff\models.py:19: ('VC', 'Vice Chancellor'),
+staff\models.py:20: ('EXAMS_RECORDS', 'Exams and Records'),
+staff\models.py:25: faculty = models.ForeignKey('institution.Faculty', on_delete=models.CASCADE, null=True, blank=True, help_text="Required for Dean")
+staff\models.py:26: department = models.ForeignKey('institution.Department', on_delete=models.CASCADE, null=True, blank=True, help_text="Required for HOD")
+staff\models.py:41: return f"{self.staff.user.get_full_name()} - {self.get_role_display()}"
+staff\models.py:46: return self.is_active and self.start_date <= today <= self.end_date
+staff\views.py:12: return view_func(request, *args, **kwargs)
+staff\views.py:13: return wrapper
+staff\views.py:17: if request.method == 'POST':
+staff\views.py:35: return redirect('staff:staff_list')
+staff\views.py:39: return render(request, 'staff/staff_create.html', {'form': form})
+staff\views.py:44: return render(request, 'staff/staff_list.html', {'staff': staff})
+staff\migrations\0001_initial.py:32: ('role', models.CharField(choices=[('LECTURER', 'Lecturer'), ('HOD', 'Head of Department'), ('DEAN', 'Dean'), ('VC', 'Vice Chancellor'), ('EXAMS_RECORDS', 'Exams and Records')], max_length=20)),
+staff\migrations\0001_initial.py:39: ('department', models.ForeignKey(blank=True, help_text='Required for HOD', null=True, on_delete=django.db.models.deletion.CASCADE, to='institution.department')),
+staff\migrations\0001_initial.py:40: ('faculty', models.ForeignKey(blank=True, help_text='Required for Dean', null=True, on_delete=django.db.models.deletion.CASCADE, to='institution.faculty')),
+students\forms.py:22: return email
+students\models.py:18: return f"{self.matric_number} - {self.user.get_full_name()}"
+students\models.py:20: @staticmethod
+students\models.py:33: return f"U/{admission_year}/{next_num:05d}"
+students\views.py:12: return view_func(request, *args, **kwargs)
+students\views.py:13: return wrapper
+students\views.py:17: if request.method == 'POST':
+students\views.py:46: return redirect('students:student_list')
+students\views.py:50: return render(request, 'students/student_clearance.html', {'form': form})
+students\views.py:55: return render(request, 'students/student_list.html', {'students': students})
+templates\accounts\dashboard.html:8: {% if is_management %}System Administrator{% elif is_student %}Student{% elif is_vc %}Vice Chancellor{% elif is_dean %}Dean{% elif is_hod %}Head of Department{% elif is_lecturer %}Lecturer{% elif is_exams %}Exams & Records{% else %}Unassigned{% endif %}
+templates\accounts\login.html:22: <form method="POST" class="space-y-6">
+templates\courses\assignment_form.html:7: <form method="POST" class="space-y-6">
+templates\courses\course_form.html:7: <form method="POST" class="space-y-6">
+templates\courses\offering_form.html:7: <form method="POST" class="space-y-6">
+templates\courses\section_form.html:7: <form method="POST" class="space-y-6">
+templates\management\confirm_delete.html:12: <form method="POST" class="flex justify-center gap-3">
+templates\management\department_form.html:7: <form method="POST" class="space-y-6">
+templates\management\faculty_form.html:7: <form method="POST" class="space-y-6">
+templates\management\programme_form.html:7: <form method="POST" class="space-y-6">
+templates\staff\staff_create.html:8: <p class="text-sm text-blue-800"><strong>Note:</strong> After creating the staff account, you can assign roles (Lecturer, HOD, Dean, etc.) from the Assignments section.</p>
+templates\staff\staff_create.html:11: <form method="POST" class="space-y-6">
+templates\students\student_clearance.html:11: <form method="POST" class="space-y-6">
+
+>>> FILE: 15_search_audit.txt >>>
+audit\apps.py:4: class AuditConfig(AppConfig):
+audit\apps.py:5: name = 'audit'
+core\settings.py:34: 'audit',
+templates\courses\assignment_form.html:18: <a href="javascript:history.back()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</a>
+templates\courses\course_form.html:18: <a href="javascript:history.back()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</a>
+templates\courses\offering_form.html:18: <a href="javascript:history.back()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</a>
+templates\courses\section_form.html:18: <a href="javascript:history.back()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</a>
+
+>>> FILE: 15_search_carryover.txt >>>
+No matches.
+
+>>> FILE: 15_search_credit_numbers.txt >>>
+No matches.
+
+>>> FILE: 15_search_credit_units.txt >>>
+courses\forms.py:11: fields = ['code', 'title', 'department', 'programme', 'level', 'semester', 'credit_units', 'is_compulsory', 'prerequisites']
+courses\forms.py:19: 'credit_units': forms.NumberInput(attrs={'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none'}),
+courses\models.py:10: credit_units = models.IntegerField()
+courses\migrations\0001_initial.py:26: ('credit_units', models.IntegerField()),
+templates\courses\course_list.html:20: <th class="p-4">Units</th>
+templates\courses\course_list.html:31: <td class="p-4 text-gray-600">{{ c.credit_units }}</td>
+
+>>> FILE: 15_search_csv_excel.txt >>>
+core\settings.py:49: TEMPLATES = [
+core\settings.py:51: 'BACKEND': 'django.template.backends.django.DjangoTemplates',
+core\settings.py:52: 'DIRS': [BASE_DIR / 'templates'],
+core\settings.py:56: 'django.template.context_processors.debug',
+core\settings.py:57: 'django.template.context_processors.request',
+
+>>> FILE: 15_search_fake_ui.txt >>>
+accounts\forms.py:6: username = forms.CharField(widget=forms.TextInput(attrs={'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none', 'placeholder': 'Username'}))
+accounts\forms.py:7: password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none', 'placeholder': 'Password'}))
+courses\forms.py:29: 'placeholder': 'e.g., 2023/2024'
+courses\forms.py:68: 'name': forms.TextInput(attrs={'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none', 'placeholder': 'e.g., A, B, Default'}),
+institution\forms.py:31: 'max_level': forms.NumberInput(attrs={'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none', 'placeholder': 'e.g., 400, 500'}),
+students\forms.py:15: admission_session = forms.CharField(max_length=20, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none', 'placeholder': 'e.g., 2023/2024'}))
+templates\base.html:17: <!-- Navigation Placeholder -->
+templates\base.html:28: <a href="#" class="text-sm text-blue-600 hover:underline">Login</a>
+
+>>> FILE: 15_search_hardcoded_data.txt >>>
+core\settings.py:20: 'django.contrib.staticfiles',
+core\settings.py:103: STATIC_URL = 'static/'
+core\settings.py:104: STATICFILES_DIRS = [BASE_DIR / 'static']
+core\settings.py:105: STATIC_ROOT = BASE_DIR / 'staticfiles'
+core\urls.py:4: from django.conf.urls.static import static
+core\urls.py:16: urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+core\urls.py:17: urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+students\models.py:20: @staticmethod
+
+>>> FILE: 15_search_lecturer_assignment.txt >>>
+courses\forms.py:2: from .models import Course, CourseOffering, Section, LecturerAssignment
+courses\forms.py:23: class CourseOfferingForm(forms.ModelForm):
+courses\forms.py:35: model = CourseOffering
+courses\forms.py:65: fields = ['offering', 'name', 'is_default']
+courses\forms.py:67: 'offering': forms.Select(attrs={'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none'}),
+courses\forms.py:71: class LecturerAssignmentForm(forms.ModelForm):
+courses\forms.py:73: model = LecturerAssignment
+courses\forms.py:74: fields = ['offering', 'section', 'lecturer']
+courses\forms.py:76: 'offering': forms.Select(attrs={'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none'}),
+courses\forms.py:78: 'lecturer': forms.Select(attrs={'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none'}),
+courses\models.py:21: class CourseOffering(models.Model):
+courses\models.py:22: course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='offerings')
+courses\models.py:23: session = models.ForeignKey('academics.AcademicSession', on_delete=models.CASCADE, related_name='offerings')
+courses\models.py:35: offering = models.ForeignKey(CourseOffering, on_delete=models.CASCADE, related_name='sections')
+courses\models.py:40: unique_together = ('offering', 'name')
+courses\models.py:43: return f"{self.offering.course.code} - Section {self.name}"
+courses\models.py:45: class LecturerAssignment(models.Model):
+courses\models.py:46: offering = models.ForeignKey(CourseOffering, on_delete=models.CASCADE, related_name='assignments')
+courses\models.py:47: section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='assignments')
+courses\models.py:48: lecturer = models.ForeignKey('staff.StaffProfile', on_delete=models.CASCADE, related_name='assignments')
+courses\models.py:51: unique_together = ('offering', 'section', 'lecturer')
+courses\models.py:54: return f"{self.lecturer.user.get_full_name()} -> {self.section}"
+courses\urls.py:13: # Offerings
+courses\urls.py:14: path('offerings/', views.offering_list, name='offering_list'),
+courses\urls.py:15: path('offerings/create/', views.offering_create, name='offering_create'),
+courses\urls.py:16: path('offerings/<int:pk>/edit/', views.offering_edit, name='offering_edit'),
+courses\urls.py:17: path('offerings/<int:pk>/delete/', views.offering_delete, name='offering_delete'),
+courses\urls.py:25: # Assignments
+courses\urls.py:26: path('assignments/', views.assignment_list, name='assignment_list'),
+courses\urls.py:27: path('assignments/create/', views.assignment_create, name='assignment_create'),
+courses\urls.py:28: path('assignments/<int:pk>/edit/', views.assignment_edit, name='assignment_edit'),
+courses\urls.py:29: path('assignments/<int:pk>/delete/', views.assignment_delete, name='assignment_delete'),
+courses\views.py:4: from .models import Course, CourseOffering, Section, LecturerAssignment
+courses\views.py:5: from .forms import CourseForm, CourseOfferingForm, SectionForm, LecturerAssignmentForm
+courses\views.py:54: # Course Offering CRUD
+courses\views.py:56: def offering_list(request):
+courses\views.py:57: offerings = CourseOffering.objects.select_related('course', 'session').all()
+courses\views.py:58: return render(request, 'courses/offering_list.html', {'offerings': offerings})
+courses\views.py:61: def offering_create(request):
+courses\views.py:63: form = CourseOfferingForm(request.POST)
+courses\views.py:66: messages.success(request, "Course offering created successfully.")
+courses\views.py:67: return redirect('courses:offering_list')
+courses\views.py:69: form = CourseOfferingForm()
+courses\views.py:70: return render(request, 'courses/offering_form.html', {'form': form, 'title': 'Create Course Offering'})
+courses\views.py:73: def offering_edit(request, pk):
+courses\views.py:74: offering = get_object_or_404(CourseOffering, pk=pk)
+courses\views.py:76: form = CourseOfferingForm(request.POST, instance=offering)
+courses\views.py:79: messages.success(request, "Course offering updated successfully.")
+courses\views.py:80: return redirect('courses:offering_list')
+courses\views.py:82: form = CourseOfferingForm(instance=offering)
+courses\views.py:83: return render(request, 'courses/offering_form.html', {'form': form, 'title': 'Edit Course Offering'})
+courses\views.py:86: def offering_delete(request, pk):
+courses\views.py:87: offering = get_object_or_404(CourseOffering, pk=pk)
+courses\views.py:89: offering.delete()
+courses\views.py:90: messages.success(request, "Course offering deleted successfully.")
+courses\views.py:91: return redirect('courses:offering_list')
+courses\views.py:92: return render(request, 'management/confirm_delete.html', {'object': offering, 'url_name': 'courses:offering_list'})
+courses\views.py:97: sections = Section.objects.select_related('offering__course').all()
+courses\views.py:134: # Lecturer Assignment CRUD
+courses\views.py:136: def assignment_list(request):
+courses\views.py:137: assignments = LecturerAssignment.objects.select_related('offering__course', 'section', 'lecturer__user').all()
+courses\views.py:138: return render(request, 'courses/assignment_list.html', {'assignments': assignments})
+courses\views.py:141: def assignment_create(request):
+courses\views.py:143: form = LecturerAssignmentForm(request.POST)
+courses\views.py:146: messages.success(request, "Lecturer assigned successfully.")
+courses\views.py:147: return redirect('courses:assignment_list')
+courses\views.py:149: form = LecturerAssignmentForm()
+courses\views.py:150: return render(request, 'courses/assignment_form.html', {'form': form, 'title': 'Assign Lecturer'})
+courses\views.py:153: def assignment_edit(request, pk):
+courses\views.py:154: assignment = get_object_or_404(LecturerAssignment, pk=pk)
+courses\views.py:156: form = LecturerAssignmentForm(request.POST, instance=assignment)
+courses\views.py:159: messages.success(request, "Lecturer assignment updated successfully.")
+courses\views.py:160: return redirect('courses:assignment_list')
+courses\views.py:162: form = LecturerAssignmentForm(instance=assignment)
+courses\views.py:163: return render(request, 'courses/assignment_form.html', {'form': form, 'title': 'Edit Lecturer Assignment'})
+courses\views.py:166: def assignment_delete(request, pk):
+courses\views.py:167: assignment = get_object_or_404(LecturerAssignment, pk=pk)
+courses\views.py:169: assignment.delete()
+courses\views.py:170: messages.success(request, "Lecturer assignment removed successfully.")
+courses\views.py:171: return redirect('courses:assignment_list')
+courses\views.py:172: return render(request, 'management/confirm_delete.html', {'object': assignment, 'url_name': 'courses:assignment_list'})
+courses\migrations\0001_initial.py:38: name='CourseOffering',
+courses\migrations\0001_initial.py:43: ('course', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='offerings', to='courses.course')),
+courses\migrations\0001_initial.py:44: ('session', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='offerings', to='academics.academicsession')),
+courses\migrations\0001_initial.py:57: ('offering', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sections', to='courses.courseoffering')),
+courses\migrations\0001_initial.py:60: 'unique_together': {('offering', 'name')},
+courses\migrations\0001_initial.py:64: name='LecturerAssignment',
+courses\migrations\0001_initial.py:67: ('lecturer', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='assignments', to='staff.staffprofile')),
+courses\migrations\0001_initial.py:68: ('offering', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='assignments', to='courses.courseoffering')),
+courses\migrations\0001_initial.py:69: ('section', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='assignments', to='courses.section')),
+courses\migrations\0001_initial.py:72: 'unique_together': {('offering', 'section', 'lecturer')},
+staff\models.py:16: ('LECTURER', 'Lecturer'),
+staff\migrations\0001_initial.py:32: ('role', models.CharField(choices=[('LECTURER', 'Lecturer'), ('HOD', 'Head of Department'), ('DEAN', 'Dean'), ('VC', 'Vice Chancellor'), ('EXAMS_RECORDS', 'Exams and Records')], max_length=20)),
+templates\accounts\dashboard.html:8: {% if is_management %}System Administrator{% elif is_student %}Student{% elif is_vc %}Vice Chancellor{% elif is_dean %}Dean{% elif is_hod %}Head of Department{% elif is_lecturer %}Lecturer{% elif is_exams %}Exams & Records{% else %}Unassigned{% endif %}
+templates\courses\assignment_list.html:2: {% block title %}Lecturer Assignments{% endblock %}
+templates\courses\assignment_list.html:3: {% block page_title %}Lecturer Assignments{% endblock %}
+templates\courses\assignment_list.html:7: <h3 class="text-lg font-bold text-gray-800">All Assignments</h3>
+templates\courses\assignment_list.html:8: <a href="{% url 'courses:assignment_create' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition flex items-center gap-2">
+templates\courses\assignment_list.html:9: <i data-lucide="plus" class="w-4 h-4"></i> Assign Lecturer
+templates\courses\assignment_list.html:16: <th class="p-4">Lecturer</th>
+templates\courses\assignment_list.html:23: {% for a in assignments %}
+templates\courses\assignment_list.html:25: <td class="p-4 font-medium text-gray-800">{{ a.lecturer.user.get_full_name }}</td>
+templates\courses\assignment_list.html:26: <td class="p-4 font-mono text-gray-600">{{ a.offering.course.code }}</td>
+templates\courses\assignment_list.html:29: <a href="{% url 'courses:assignment_edit' a.pk %}" class="text-blue-600 hover:underline text-sm">Edit</a>
+templates\courses\assignment_list.html:30: <a href="{% url 'courses:assignment_delete' a.pk %}" class="text-red-600 hover:underline text-sm">Delete</a>
+templates\courses\assignment_list.html:34: <tr><td colspan="4" class="p-8 text-center text-gray-500">No assignments found.</td></tr>
+templates\courses\offering_list.html:2: {% block title %}Course Offerings{% endblock %}
+templates\courses\offering_list.html:3: {% block page_title %}Course Offerings{% endblock %}
+templates\courses\offering_list.html:7: <h3 class="text-lg font-bold text-gray-800">All Course Offerings</h3>
+templates\courses\offering_list.html:8: <a href="{% url 'courses:offering_create' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition flex items-center gap-2">
+templates\courses\offering_list.html:9: <i data-lucide="plus" class="w-4 h-4"></i> Add Offering
+templates\courses\offering_list.html:24: {% for o in offerings %}
+templates\courses\offering_list.html:31: <a href="{% url 'courses:offering_edit' o.pk %}" class="text-blue-600 hover:underline text-sm">Edit</a>
+templates\courses\offering_list.html:32: <a href="{% url 'courses:offering_delete' o.pk %}" class="text-red-600 hover:underline text-sm">Delete</a>
+templates\courses\offering_list.html:36: <tr><td colspan="5" class="p-8 text-center text-gray-500">No offerings found.</td></tr>
+templates\courses\section_list.html:25: <td class="p-4 font-mono font-medium text-gray-800">{{ s.offering.course.code }}</td>
+templates\management\base.html:37: <a href="{% url 'courses:offering_list' %}" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition">
+templates\management\base.html:38: <i data-lucide="calendar" class="w-5 h-5"></i> <span>Offerings</span>
+templates\management\base.html:43: <a href="{% url 'courses:assignment_list' %}" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition">
+templates\management\base.html:44: <i data-lucide="user-check" class="w-5 h-5"></i> <span>Assignments</span>
+templates\management\dashboard.html:73: <a href="{% url 'courses:assignment_create' %}" class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition text-center border border-gray-200 block">
+templates\management\dashboard.html:75: <span class="text-sm font-medium text-gray-700">Assign Lecturer</span>
+templates\staff\staff_create.html:8: <p class="text-sm text-blue-800"><strong>Note:</strong> After creating the staff account, you can assign roles (Lecturer, HOD, Dean, etc.) from the Assignments section.</p>
+
+>>> FILE: 15_search_management_modules.txt >>>
+manage.py:11: from django.core.management import execute_from_command_line
+accounts\models.py:26: is_management = models.BooleanField(default=False, help_text="Designates whether the user can access the custom management dashboard.")
+accounts\views.py:24: """Routes users to their specific dashboards based on their roles."""
+accounts\views.py:25: if user.is_management:
+accounts\views.py:38: """Fallback dashboard for users without specific roles."""
+accounts\migrations\0001_initial.py:29: ('is_management', models.BooleanField(default=False, help_text='Designates whether the user can access the custom management dashboard.')),
+core\urls.py:9: path('management/', include('institution.urls')),
+core\urls.py:10: path('management/', include('courses.urls')),
+core\urls.py:11: path('management/', include('students.urls')),
+core\urls.py:12: path('management/', include('staff.urls')),
+courses\views.py:7: def management_required(view_func):
+courses\views.py:9: @user_passes_test(lambda u: u.is_management)
+courses\views.py:15: @management_required
+courses\views.py:20: @management_required
+courses\views.py:32: @management_required
+courses\views.py:45: @management_required
+courses\views.py:52: return render(request, 'management/confirm_delete.html', {'object': course, 'url_name': 'courses:course_list'})
+courses\views.py:55: @management_required
+courses\views.py:60: @management_required
+courses\views.py:72: @management_required
+courses\views.py:85: @management_required
+courses\views.py:92: return render(request, 'management/confirm_delete.html', {'object': offering, 'url_name': 'courses:offering_list'})
+courses\views.py:95: @management_required
+courses\views.py:100: @management_required
+courses\views.py:112: @management_required
+courses\views.py:125: @management_required
+courses\views.py:132: return render(request, 'management/confirm_delete.html', {'object': section, 'url_name': 'courses:section_list'})
+courses\views.py:135: @management_required
+courses\views.py:140: @management_required
+courses\views.py:152: @management_required
+courses\views.py:165: @management_required
+courses\views.py:172: return render(request, 'management/confirm_delete.html', {'object': assignment, 'url_name': 'courses:assignment_list'})
+institution\urls.py:7: path('dashboard/', views.management_dashboard, name='dashboard'),
+institution\views.py:12: def management_required(view_func):
+institution\views.py:14: @user_passes_test(lambda u: u.is_management)
+institution\views.py:19: @management_required
+institution\views.py:20: def management_dashboard(request):
+institution\views.py:30: return render(request, 'management/dashboard.html', context)
+institution\views.py:33: @management_required
+institution\views.py:36: return render(request, 'management/faculty_list.html', {'faculties': faculties})
+institution\views.py:38: @management_required
+institution\views.py:48: return render(request, 'management/faculty_form.html', {'form': form, 'title': 'Create Faculty'})
+institution\views.py:50: @management_required
+institution\views.py:61: return render(request, 'management/faculty_form.html', {'form': form, 'title': 'Edit Faculty'})
+institution\views.py:63: @management_required
+institution\views.py:70: return render(request, 'management/confirm_delete.html', {'object': faculty, 'url_name': 'institution:faculty_list'})
+institution\views.py:73: @management_required
+institution\views.py:76: return render(request, 'management/department_list.html', {'departments': departments})
+institution\views.py:78: @management_required
+institution\views.py:88: return render(request, 'management/department_form.html', {'form': form, 'title': 'Create Department'})
+institution\views.py:90: @management_required
+institution\views.py:101: return render(request, 'management/department_form.html', {'form': form, 'title': 'Edit Department'})
+institution\views.py:103: @management_required
+institution\views.py:110: return render(request, 'management/confirm_delete.html', {'object': department, 'url_name': 'institution:department_list'})
+institution\views.py:113: @management_required
+institution\views.py:116: return render(request, 'management/programme_list.html', {'programmes': programmes})
+institution\views.py:118: @management_required
+institution\views.py:128: return render(request, 'management/programme_form.html', {'form': form, 'title': 'Create Programme'})
+institution\views.py:130: @management_required
+institution\views.py:141: return render(request, 'management/programme_form.html', {'form': form, 'title': 'Edit Programme'})
+institution\views.py:143: @management_required
+institution\views.py:150: return render(request, 'management/confirm_delete.html', {'object': programme, 'url_name': 'institution:programme_list'})
+staff\models.py:14: class Appointment(models.Model):
+staff\models.py:15: ROLE_CHOICES = [
+staff\models.py:23: staff = models.ForeignKey(StaffProfile, on_delete=models.CASCADE, related_name='appointments')
+staff\models.py:24: role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+staff\models.py:32: appointed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='made_appointments')
+staff\models.py:35: revoked_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='revoked_appointments')
+staff\models.py:41: return f"{self.staff.user.get_full_name()} - {self.get_role_display()}"
+staff\views.py:8: def management_required(view_func):
+staff\views.py:10: @user_passes_test(lambda u: u.is_management)
+staff\views.py:15: @management_required
+staff\views.py:41: @management_required
+staff\migrations\0001_initial.py:29: name='Appointment',
+staff\migrations\0001_initial.py:32: ('role', models.CharField(choices=[('LECTURER', 'Lecturer'), ('HOD', 'Head of Department'), ('DEAN', 'Dean'), ('VC', 'Vice Chancellor'), ('EXAMS_RECORDS', 'Exams and Records')], max_length=20)),
+staff\migrations\0001_initial.py:38: ('appointed_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='made_appointments', to=settings.AUTH_USER_MODEL)),
+staff\migrations\0001_initial.py:41: ('revoked_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='revoked_appointments', to=settings.AUTH_USER_MODEL)),
+staff\migrations\0001_initial.py:42: ('staff', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='appointments', to='staff.staffprofile')),
+students\views.py:8: def management_required(view_func):
+students\views.py:10: @user_passes_test(lambda u: u.is_management)
+students\views.py:15: @management_required
+students\views.py:52: @management_required
+templates\accounts\dashboard.html:7: <p class="text-gray-600">Role: <span class="font-semibold text-blue-600">
+templates\accounts\dashboard.html:8: {% if is_management %}System Administrator{% elif is_student %}Student{% elif is_vc %}Vice Chancellor{% elif is_dean %}Dean{% elif is_hod %}Head of Department{% elif is_lecturer %}Lecturer{% elif is_exams %}Exams & Records{% else %}Unassigned{% endif %}
+templates\courses\assignment_form.html:1: {% extends 'management/base.html' %}
+templates\courses\assignment_list.html:1: {% extends 'management/base.html' %}
+templates\courses\course_form.html:1: {% extends 'management/base.html' %}
+templates\courses\course_list.html:1: {% extends 'management/base.html' %}
+templates\courses\offering_form.html:1: {% extends 'management/base.html' %}
+templates\courses\offering_list.html:1: {% extends 'management/base.html' %}
+templates\courses\section_form.html:1: {% extends 'management/base.html' %}
+templates\courses\section_list.html:1: {% extends 'management/base.html' %}
+templates\management\base.html:6: <title>{% block title %}Management Portal{% endblock %}</title>
+templates\management\base.html:19: <p class="text-xs text-slate-400 mt-1">Management Portal</p>
+templates\management\confirm_delete.html:1: {% extends 'management/base.html' %}
+templates\management\dashboard.html:1: {% extends 'management/base.html' %}
+templates\management\dashboard.html:2: {% block title %}Management Dashboard{% endblock %}
+templates\management\department_form.html:1: {% extends 'management/base.html' %}
+templates\management\department_list.html:1: {% extends 'management/base.html' %}
+templates\management\department_list.html:3: {% block page_title %}Department Management{% endblock %}
+templates\management\faculty_form.html:1: {% extends 'management/base.html' %}
+templates\management\faculty_list.html:1: {% extends 'management/base.html' %}
+templates\management\faculty_list.html:3: {% block page_title %}Faculty Management{% endblock %}
+templates\management\programme_form.html:1: {% extends 'management/base.html' %}
+templates\management\programme_list.html:1: {% extends 'management/base.html' %}
+templates\management\programme_list.html:3: {% block page_title %}Programme Management{% endblock %}
+templates\staff\staff_create.html:1: {% extends 'management/base.html' %}
+templates\staff\staff_create.html:8: <p class="text-sm text-blue-800"><strong>Note:</strong> After creating the staff account, you can assign roles (Lecturer, HOD, Dean, etc.) from the Assignments section.</p>
+templates\staff\staff_list.html:1: {% extends 'management/base.html' %}
+templates\students\student_clearance.html:1: {% extends 'management/base.html' %}
+templates\students\student_list.html:1: {% extends 'management/base.html' %}
+
+>>> FILE: 15_search_payment_bursary.txt >>>
+No matches.
+
+>>> FILE: 15_search_qualification.txt >>>
+No matches.
+
+>>> FILE: 15_search_result_status.txt >>>
+No matches.
+
+>>> FILE: 15_search_sections_groups.txt >>>
+accounts\migrations\0001_initial.py:31: ('groups', models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_name='user_set', related_query_name='user', to='auth.group', verbose_name='groups')),
+courses\forms.py:2: from .models import Course, CourseOffering, Section, LecturerAssignment
+courses\forms.py:64: model = Section
+courses\forms.py:74: fields = ['offering', 'section', 'lecturer']
+courses\forms.py:77: 'section': forms.Select(attrs={'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none'}),
+courses\models.py:34: class Section(models.Model):
+courses\models.py:35: offering = models.ForeignKey(CourseOffering, on_delete=models.CASCADE, related_name='sections')
+courses\models.py:43: return f"{self.offering.course.code} - Section {self.name}"
+courses\models.py:47: section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='assignments')
+courses\models.py:51: unique_together = ('offering', 'section', 'lecturer')
+courses\models.py:54: return f"{self.lecturer.user.get_full_name()} -> {self.section}"
+courses\urls.py:19: # Sections
+courses\urls.py:20: path('sections/', views.section_list, name='section_list'),
+courses\urls.py:21: path('sections/create/', views.section_create, name='section_create'),
+courses\urls.py:22: path('sections/<int:pk>/edit/', views.section_edit, name='section_edit'),
+courses\urls.py:23: path('sections/<int:pk>/delete/', views.section_delete, name='section_delete'),
+courses\views.py:4: from .models import Course, CourseOffering, Section, LecturerAssignment
+courses\views.py:94: # Section CRUD
+courses\views.py:97: sections = Section.objects.select_related('offering__course').all()
+courses\views.py:98: return render(request, 'courses/section_list.html', {'sections': sections})
+courses\views.py:106: messages.success(request, "Section created successfully.")
+courses\views.py:110: return render(request, 'courses/section_form.html', {'form': form, 'title': 'Create Section'})
+courses\views.py:114: section = get_object_or_404(Section, pk=pk)
+courses\views.py:116: form = SectionForm(request.POST, instance=section)
+courses\views.py:119: messages.success(request, "Section updated successfully.")
+courses\views.py:122: form = SectionForm(instance=section)
+courses\views.py:123: return render(request, 'courses/section_form.html', {'form': form, 'title': 'Edit Section'})
+courses\views.py:127: section = get_object_or_404(Section, pk=pk)
+courses\views.py:129: section.delete()
+courses\views.py:130: messages.success(request, "Section deleted successfully.")
+courses\views.py:132: return render(request, 'management/confirm_delete.html', {'object': section, 'url_name': 'courses:section_list'})
+courses\views.py:137: assignments = LecturerAssignment.objects.select_related('offering__course', 'section', 'lecturer__user').all()
+courses\migrations\0001_initial.py:52: name='Section',
+courses\migrations\0001_initial.py:57: ('offering', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sections', to='courses.courseoffering')),
+courses\migrations\0001_initial.py:69: ('section', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='assignments', to='courses.section')),
+courses\migrations\0001_initial.py:72: 'unique_together': {('offering', 'section', 'lecturer')},
+templates\courses\assignment_list.html:18: <th class="p-4">Section</th>
+templates\courses\assignment_list.html:27: <td class="p-4 text-gray-600">{{ a.section.name }}</td>
+templates\courses\section_list.html:2: {% block title %}Sections{% endblock %}
+templates\courses\section_list.html:3: {% block page_title %}Course Sections{% endblock %}
+templates\courses\section_list.html:7: <h3 class="text-lg font-bold text-gray-800">All Sections</h3>
+templates\courses\section_list.html:9: <i data-lucide="plus" class="w-4 h-4"></i> Add Section
+templates\courses\section_list.html:17: <th class="p-4">Section Name</th>
+templates\courses\section_list.html:23: {% for s in sections %}
+templates\courses\section_list.html:34: <tr><td colspan="4" class="p-8 text-center text-gray-500">No sections found.</td></tr>
+templates\management\base.html:41: <i data-lucide="users" class="w-5 h-5"></i> <span>Sections</span>
+templates\staff\staff_create.html:8: <p class="text-sm text-blue-800"><strong>Note:</strong> After creating the staff account, you can assign roles (Lecturer, HOD, Dean, etc.) from the Assignments section.</p>
+
+>>> FILE: 15_search_session_semester.txt >>>
+academics\models.py:3: class AcademicSession(models.Model):
+academics\models.py:4: name = models.CharField(max_length=20, unique=True, help_text="e.g., 2023/2024")
+academics\models.py:17: AcademicSession.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
+academics\models.py:20: class Semester(models.Model):
+academics\models.py:21: SEMESTER_CHOICES = [
+academics\models.py:22: ('FIRST', 'First Semester'),
+academics\models.py:23: ('SECOND', 'Second Semester'),
+academics\models.py:25: name = models.CharField(max_length=20, choices=SEMESTER_CHOICES)
+academics\models.py:26: session = models.ForeignKey(AcademicSession, on_delete=models.CASCADE, related_name='semesters')
+academics\models.py:32: unique_together = ('session', 'name')
+academics\models.py:33: ordering = ['-session__name', 'name']
+academics\models.py:36: return f"{self.get_name_display()} - {self.session.name}"
+academics\models.py:40: Semester.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
+academics\migrations\0001_initial.py:16: name='AcademicSession',
+academics\migrations\0001_initial.py:19: ('name', models.CharField(help_text='e.g., 2023/2024', max_length=20, unique=True)),
+academics\migrations\0001_initial.py:29: name='Semester',
+academics\migrations\0001_initial.py:32: ('name', models.CharField(choices=[('FIRST', 'First Semester'), ('SECOND', 'Second Semester')], max_length=20)),
+academics\migrations\0001_initial.py:36: ('session', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='semesters', to='academics.academicsession')),
+academics\migrations\0001_initial.py:39: 'ordering': ['-session__start_date', 'name'],
+academics\migrations\0001_initial.py:40: 'unique_together': {('session', 'name')},
+academics\migrations\0002_alter_academicsession_options_alter_semester_options_and_more.py:14: name='academicsession',
+academics\migrations\0002_alter_academicsession_options_alter_semester_options_and_more.py:18: name='semester',
+academics\migrations\0002_alter_academicsession_options_alter_semester_options_and_more.py:19: options={'ordering': ['-session__name', 'name']},
+academics\migrations\0002_alter_academicsession_options_alter_semester_options_and_more.py:22: model_name='academicsession',
+academics\migrations\0002_alter_academicsession_options_alter_semester_options_and_more.py:27: model_name='academicsession',
+academics\migrations\0002_alter_academicsession_options_alter_semester_options_and_more.py:32: model_name='semester',
+academics\migrations\0002_alter_academicsession_options_alter_semester_options_and_more.py:37: model_name='semester',
+core\settings.py:18: 'django.contrib.sessions',
+core\settings.py:39: 'django.contrib.sessions.middleware.SessionMiddleware',
+courses\forms.py:4: from academics.models import AcademicSession
+courses\forms.py:11: fields = ['code', 'title', 'department', 'programme', 'level', 'semester', 'credit_units', 'is_compulsory', 'prerequisites']
+courses\forms.py:18: 'semester': forms.Select(attrs={'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none'}),
+courses\forms.py:24: # Custom text field for manual session input
+courses\forms.py:25: session_name = forms.CharField(
+courses\forms.py:29: 'placeholder': 'e.g., 2023/2024'
+courses\forms.py:31: help_text="Type the session name. It will be created automatically if it doesn't exist."
+courses\forms.py:36: # Note: 'session' is intentionally excluded here so Django doesn't try to auto-map it
+courses\forms.py:37: fields = ['course', 'semester_type', 'level']
+courses\forms.py:40: 'semester_type': forms.Select(attrs={'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none'}),
+courses\forms.py:44: def clean_session_name(self):
+courses\forms.py:45: return self.cleaned_data['session_name'].strip()
+courses\forms.py:51: # Get or create the AcademicSession based on the typed name
+courses\forms.py:52: session_name = self.cleaned_data['session_name']
+courses\forms.py:53: session_obj, _ = AcademicSession.objects.get_or_create(name=session_name)
+courses\forms.py:56: instance.session = session_obj
+courses\models.py:9: semester = models.CharField(max_length=10, choices=[('FIRST', 'First Semester'), ('SECOND', 'Second Semester')])
+courses\models.py:23: session = models.ForeignKey('academics.AcademicSession', on_delete=models.CASCADE, related_name='offerings')
+courses\models.py:24: semester_type = models.CharField(max_length=10, choices=[('FIRST', 'First Semester'), ('SECOND', 'Second Semester')])
+courses\models.py:28: unique_together = ('course', 'session', 'semester_type', 'level')
+courses\models.py:29: ordering = ['session__name', 'course__code']
+courses\models.py:32: return f"{self.course.code} ({self.session.name} - {self.semester_type})"
+courses\views.py:57: offerings = CourseOffering.objects.select_related('course', 'session').all()
+courses\migrations\0001_initial.py:25: ('semester', models.CharField(choices=[('FIRST', 'First Semester'), ('SECOND', 'Second Semester')], max_length=10)),
+courses\migrations\0001_initial.py:41: ('semester_type', models.CharField(choices=[('FIRST', 'First Semester'), ('SECOND', 'Second Semester')], max_length=10)),
+courses\migrations\0001_initial.py:44: ('session', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='offerings', to='academics.academicsession')),
+courses\migrations\0001_initial.py:47: 'ordering': ['session__name', 'course__code'],
+courses\migrations\0001_initial.py:48: 'unique_together': {('course', 'session', 'semester_type', 'level')},
+institution\views.py:10: from academics.models import AcademicSession, Semester
+institution\views.py:27: 'active_session': AcademicSession.objects.filter(is_active=True).first(),
+institution\views.py:28: 'active_semester': Semester.objects.filter(is_active=True).first(),
+students\forms.py:15: admission_session = forms.CharField(max_length=20, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none', 'placeholder': 'e.g., 2023/2024'}))
+students\models.py:10: admission_session = models.CharField(max_length=20, help_text="e.g., 2023/2024")
+students\models.py:24: admission_session__startswith=str(admission_year)
+students\views.py:21: admission_year = form.cleaned_data['admission_session'].split('/')[0]
+students\views.py:41: admission_session=form.cleaned_data['admission_session'],
+students\migrations\0001_initial.py:24: ('admission_session', models.CharField(help_text='e.g., 2023/2024', max_length=20)),
+templates\courses\offering_list.html:17: <th class="p-4">Session</th>
+templates\courses\offering_list.html:18: <th class="p-4">Semester</th>
+templates\courses\offering_list.html:27: <td class="p-4 text-gray-600">{{ o.session.name }}</td>
+templates\courses\offering_list.html:28: <td class="p-4 text-gray-600">{{ o.semester_type }}</td>
+templates\management\dashboard.html:49: <span class="text-sm font-medium text-blue-800">Active Session</span>
+templates\management\dashboard.html:53: <span class="text-sm font-medium text-green-800">Active Semester</span>
+templates\students\student_list.html:21: <th class="p-4">Session</th>
+templates\students\student_list.html:32: <td class="p-4 text-gray-600">{{ s.admission_session }}</td>
+
+>>> FILE: 15_search_student_registration.txt >>>
+academics\admin.py:3: # Register your models here.
+accounts\admin.py:3: # Register your models here.
+analytics\admin.py:3: # Register your models here.
+approvals\admin.py:3: # Register your models here.
+audit\admin.py:3: # Register your models here.
+core\settings.py:29: 'registration',
+courses\admin.py:3: # Register your models here.
+institution\admin.py:3: # Register your models here.
+registration\admin.py:3: # Register your models here.
+registration\apps.py:4: class RegistrationConfig(AppConfig):
+registration\apps.py:5: name = 'registration'
+results\admin.py:3: # Register your models here.
+staff\admin.py:3: # Register your models here.
+students\admin.py:3: # Register your models here.
+templates\courses\course_list.html:9: <i data-lucide="plus" class="w-4 h-4"></i> Add Course
+templates\courses\course_list.html:38: <tr><td colspan="6" class="p-8 text-center text-gray-500">No courses found. Click "Add Course" to create one.</td></tr>
+templates\management\dashboard.html:71: <span class="text-sm font-medium text-gray-700">Add Course</span>
+transcripts\admin.py:3: # Register your models here.
+
+>>> FILE: 15_search_transcript.txt >>>
+core\settings.py:33: 'transcripts',
+transcripts\apps.py:4: class TranscriptsConfig(AppConfig):
+transcripts\apps.py:5: name = 'transcripts'
+=== PHASE A INSPECTION DUMP END ===

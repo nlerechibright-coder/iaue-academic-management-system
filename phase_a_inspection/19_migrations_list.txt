@@ -1,0 +1,7 @@
+﻿academics\migrations\0001_initial.py
+academics\migrations\0002_alter_academicsession_options_alter_semester_options_and_more.py
+accounts\migrations\0001_initial.py
+courses\migrations\0001_initial.py
+institution\migrations\0001_initial.py
+staff\migrations\0001_initial.py
+students\migrations\0001_initial.py

@@ -1,0 +1,123 @@
+﻿courses\forms.py:2: from .models import Course, CourseOffering, Section, LecturerAssignment
+courses\forms.py:23: class CourseOfferingForm(forms.ModelForm):
+courses\forms.py:35: model = CourseOffering
+courses\forms.py:65: fields = ['offering', 'name', 'is_default']
+courses\forms.py:67: 'offering': forms.Select(attrs={'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none'}),
+courses\forms.py:71: class LecturerAssignmentForm(forms.ModelForm):
+courses\forms.py:73: model = LecturerAssignment
+courses\forms.py:74: fields = ['offering', 'section', 'lecturer']
+courses\forms.py:76: 'offering': forms.Select(attrs={'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none'}),
+courses\forms.py:78: 'lecturer': forms.Select(attrs={'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none'}),
+courses\models.py:21: class CourseOffering(models.Model):
+courses\models.py:22: course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='offerings')
+courses\models.py:23: session = models.ForeignKey('academics.AcademicSession', on_delete=models.CASCADE, related_name='offerings')
+courses\models.py:35: offering = models.ForeignKey(CourseOffering, on_delete=models.CASCADE, related_name='sections')
+courses\models.py:40: unique_together = ('offering', 'name')
+courses\models.py:43: return f"{self.offering.course.code} - Section {self.name}"
+courses\models.py:45: class LecturerAssignment(models.Model):
+courses\models.py:46: offering = models.ForeignKey(CourseOffering, on_delete=models.CASCADE, related_name='assignments')
+courses\models.py:47: section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='assignments')
+courses\models.py:48: lecturer = models.ForeignKey('staff.StaffProfile', on_delete=models.CASCADE, related_name='assignments')
+courses\models.py:51: unique_together = ('offering', 'section', 'lecturer')
+courses\models.py:54: return f"{self.lecturer.user.get_full_name()} -> {self.section}"
+courses\urls.py:13: # Offerings
+courses\urls.py:14: path('offerings/', views.offering_list, name='offering_list'),
+courses\urls.py:15: path('offerings/create/', views.offering_create, name='offering_create'),
+courses\urls.py:16: path('offerings/<int:pk>/edit/', views.offering_edit, name='offering_edit'),
+courses\urls.py:17: path('offerings/<int:pk>/delete/', views.offering_delete, name='offering_delete'),
+courses\urls.py:25: # Assignments
+courses\urls.py:26: path('assignments/', views.assignment_list, name='assignment_list'),
+courses\urls.py:27: path('assignments/create/', views.assignment_create, name='assignment_create'),
+courses\urls.py:28: path('assignments/<int:pk>/edit/', views.assignment_edit, name='assignment_edit'),
+courses\urls.py:29: path('assignments/<int:pk>/delete/', views.assignment_delete, name='assignment_delete'),
+courses\views.py:4: from .models import Course, CourseOffering, Section, LecturerAssignment
+courses\views.py:5: from .forms import CourseForm, CourseOfferingForm, SectionForm, LecturerAssignmentForm
+courses\views.py:54: # Course Offering CRUD
+courses\views.py:56: def offering_list(request):
+courses\views.py:57: offerings = CourseOffering.objects.select_related('course', 'session').all()
+courses\views.py:58: return render(request, 'courses/offering_list.html', {'offerings': offerings})
+courses\views.py:61: def offering_create(request):
+courses\views.py:63: form = CourseOfferingForm(request.POST)
+courses\views.py:66: messages.success(request, "Course offering created successfully.")
+courses\views.py:67: return redirect('courses:offering_list')
+courses\views.py:69: form = CourseOfferingForm()
+courses\views.py:70: return render(request, 'courses/offering_form.html', {'form': form, 'title': 'Create Course Offering'})
+courses\views.py:73: def offering_edit(request, pk):
+courses\views.py:74: offering = get_object_or_404(CourseOffering, pk=pk)
+courses\views.py:76: form = CourseOfferingForm(request.POST, instance=offering)
+courses\views.py:79: messages.success(request, "Course offering updated successfully.")
+courses\views.py:80: return redirect('courses:offering_list')
+courses\views.py:82: form = CourseOfferingForm(instance=offering)
+courses\views.py:83: return render(request, 'courses/offering_form.html', {'form': form, 'title': 'Edit Course Offering'})
+courses\views.py:86: def offering_delete(request, pk):
+courses\views.py:87: offering = get_object_or_404(CourseOffering, pk=pk)
+courses\views.py:89: offering.delete()
+courses\views.py:90: messages.success(request, "Course offering deleted successfully.")
+courses\views.py:91: return redirect('courses:offering_list')
+courses\views.py:92: return render(request, 'management/confirm_delete.html', {'object': offering, 'url_name': 'courses:offering_list'})
+courses\views.py:97: sections = Section.objects.select_related('offering__course').all()
+courses\views.py:134: # Lecturer Assignment CRUD
+courses\views.py:136: def assignment_list(request):
+courses\views.py:137: assignments = LecturerAssignment.objects.select_related('offering__course', 'section', 'lecturer__user').all()
+courses\views.py:138: return render(request, 'courses/assignment_list.html', {'assignments': assignments})
+courses\views.py:141: def assignment_create(request):
+courses\views.py:143: form = LecturerAssignmentForm(request.POST)
+courses\views.py:146: messages.success(request, "Lecturer assigned successfully.")
+courses\views.py:147: return redirect('courses:assignment_list')
+courses\views.py:149: form = LecturerAssignmentForm()
+courses\views.py:150: return render(request, 'courses/assignment_form.html', {'form': form, 'title': 'Assign Lecturer'})
+courses\views.py:153: def assignment_edit(request, pk):
+courses\views.py:154: assignment = get_object_or_404(LecturerAssignment, pk=pk)
+courses\views.py:156: form = LecturerAssignmentForm(request.POST, instance=assignment)
+courses\views.py:159: messages.success(request, "Lecturer assignment updated successfully.")
+courses\views.py:160: return redirect('courses:assignment_list')
+courses\views.py:162: form = LecturerAssignmentForm(instance=assignment)
+courses\views.py:163: return render(request, 'courses/assignment_form.html', {'form': form, 'title': 'Edit Lecturer Assignment'})
+courses\views.py:166: def assignment_delete(request, pk):
+courses\views.py:167: assignment = get_object_or_404(LecturerAssignment, pk=pk)
+courses\views.py:169: assignment.delete()
+courses\views.py:170: messages.success(request, "Lecturer assignment removed successfully.")
+courses\views.py:171: return redirect('courses:assignment_list')
+courses\views.py:172: return render(request, 'management/confirm_delete.html', {'object': assignment, 'url_name': 'courses:assignment_list'})
+courses\migrations\0001_initial.py:38: name='CourseOffering',
+courses\migrations\0001_initial.py:43: ('course', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='offerings', to='courses.course')),
+courses\migrations\0001_initial.py:44: ('session', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='offerings', to='academics.academicsession')),
+courses\migrations\0001_initial.py:57: ('offering', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sections', to='courses.courseoffering')),
+courses\migrations\0001_initial.py:60: 'unique_together': {('offering', 'name')},
+courses\migrations\0001_initial.py:64: name='LecturerAssignment',
+courses\migrations\0001_initial.py:67: ('lecturer', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='assignments', to='staff.staffprofile')),
+courses\migrations\0001_initial.py:68: ('offering', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='assignments', to='courses.courseoffering')),
+courses\migrations\0001_initial.py:69: ('section', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='assignments', to='courses.section')),
+courses\migrations\0001_initial.py:72: 'unique_together': {('offering', 'section', 'lecturer')},
+staff\models.py:16: ('LECTURER', 'Lecturer'),
+staff\migrations\0001_initial.py:32: ('role', models.CharField(choices=[('LECTURER', 'Lecturer'), ('HOD', 'Head of Department'), ('DEAN', 'Dean'), ('VC', 'Vice Chancellor'), ('EXAMS_RECORDS', 'Exams and Records')], max_length=20)),
+templates\accounts\dashboard.html:8: {% if is_management %}System Administrator{% elif is_student %}Student{% elif is_vc %}Vice Chancellor{% elif is_dean %}Dean{% elif is_hod %}Head of Department{% elif is_lecturer %}Lecturer{% elif is_exams %}Exams & Records{% else %}Unassigned{% endif %}
+templates\courses\assignment_list.html:2: {% block title %}Lecturer Assignments{% endblock %}
+templates\courses\assignment_list.html:3: {% block page_title %}Lecturer Assignments{% endblock %}
+templates\courses\assignment_list.html:7: <h3 class="text-lg font-bold text-gray-800">All Assignments</h3>
+templates\courses\assignment_list.html:8: <a href="{% url 'courses:assignment_create' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition flex items-center gap-2">
+templates\courses\assignment_list.html:9: <i data-lucide="plus" class="w-4 h-4"></i> Assign Lecturer
+templates\courses\assignment_list.html:16: <th class="p-4">Lecturer</th>
+templates\courses\assignment_list.html:23: {% for a in assignments %}
+templates\courses\assignment_list.html:25: <td class="p-4 font-medium text-gray-800">{{ a.lecturer.user.get_full_name }}</td>
+templates\courses\assignment_list.html:26: <td class="p-4 font-mono text-gray-600">{{ a.offering.course.code }}</td>
+templates\courses\assignment_list.html:29: <a href="{% url 'courses:assignment_edit' a.pk %}" class="text-blue-600 hover:underline text-sm">Edit</a>
+templates\courses\assignment_list.html:30: <a href="{% url 'courses:assignment_delete' a.pk %}" class="text-red-600 hover:underline text-sm">Delete</a>
+templates\courses\assignment_list.html:34: <tr><td colspan="4" class="p-8 text-center text-gray-500">No assignments found.</td></tr>
+templates\courses\offering_list.html:2: {% block title %}Course Offerings{% endblock %}
+templates\courses\offering_list.html:3: {% block page_title %}Course Offerings{% endblock %}
+templates\courses\offering_list.html:7: <h3 class="text-lg font-bold text-gray-800">All Course Offerings</h3>
+templates\courses\offering_list.html:8: <a href="{% url 'courses:offering_create' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition flex items-center gap-2">
+templates\courses\offering_list.html:9: <i data-lucide="plus" class="w-4 h-4"></i> Add Offering
+templates\courses\offering_list.html:24: {% for o in offerings %}
+templates\courses\offering_list.html:31: <a href="{% url 'courses:offering_edit' o.pk %}" class="text-blue-600 hover:underline text-sm">Edit</a>
+templates\courses\offering_list.html:32: <a href="{% url 'courses:offering_delete' o.pk %}" class="text-red-600 hover:underline text-sm">Delete</a>
+templates\courses\offering_list.html:36: <tr><td colspan="5" class="p-8 text-center text-gray-500">No offerings found.</td></tr>
+templates\courses\section_list.html:25: <td class="p-4 font-mono font-medium text-gray-800">{{ s.offering.course.code }}</td>
+templates\management\base.html:37: <a href="{% url 'courses:offering_list' %}" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition">
+templates\management\base.html:38: <i data-lucide="calendar" class="w-5 h-5"></i> <span>Offerings</span>
+templates\management\base.html:43: <a href="{% url 'courses:assignment_list' %}" class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-slate-800 transition">
+templates\management\base.html:44: <i data-lucide="user-check" class="w-5 h-5"></i> <span>Assignments</span>
+templates\management\dashboard.html:73: <a href="{% url 'courses:assignment_create' %}" class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition text-center border border-gray-200 block">
+templates\management\dashboard.html:75: <span class="text-sm font-medium text-gray-700">Assign Lecturer</span>
+templates\staff\staff_create.html:8: <p class="text-sm text-blue-800"><strong>Note:</strong> After creating the staff account, you can assign roles (Lecturer, HOD, Dean, etc.) from the Assignments section.</p>

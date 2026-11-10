@@ -1,0 +1,335 @@
+﻿{% extends 'management/base.html' %}
+{% block title %}{{ sheet.offering.course.code }} Results{% endblock %}
+{% block page_title %}Result Sheet Detail{% endblock %}
+
+{% block mgmt_content %}
+<div class="max-w-7xl mx-auto space-y-8">
+
+    <!-- Header Card -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">{{ sheet.offering.course.code }} - {{ sheet.offering.course.title }}</h1>
+            <p class="text-sm text-slate-500 mt-1">
+                Session: {{ sheet.offering.session.name }} • Lecturer: {{ sheet.lecturer.user.get_full_name|default:"Unassigned" }}
+            </p>
+        </div>
+        
+        <div class="flex items-center gap-3">
+            <!-- Status Badge -->
+            {% if sheet.status == 'PUBLISHED' %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 ring-1 ring-inset ring-emerald-600/20">Published</span>
+            {% elif sheet.status == 'SUBMITTED' %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 ring-1 ring-inset ring-blue-600/20">Submitted for Review</span>
+            {% elif sheet.status == 'RETURNED' %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 ring-1 ring-inset ring-red-600/20">Returned for Correction</span>
+            {% elif sheet.status == 'APPROVED_HOD' %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 ring-1 ring-inset ring-purple-600/20">Approved by HOD</span>
+            {% elif sheet.status == 'APPROVED_DEAN' %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 ring-1 ring-inset ring-orange-600/20">Approved by Dean</span>
+            {% elif sheet.status == 'VERIFIED_ER' %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-800 ring-1 ring-inset ring-teal-600/20">Verified by Exams</span>
+            {% else %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-800">{{ sheet.get_status_display }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ACTION BAR (Visible only if user can act) -->
+    {% if can_hod_approve or can_dean_approve or can_verify_er or can_publish_result %}
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-wrap gap-3 items-center justify-end">
+        <p class="text-sm text-slate-500 mr-auto">Review Actions:</p>
+        
+        <!-- HOD Actions -->
+        {% if can_hod_approve %}
+            <form method="POST" action="{% url 'results:hod_approve' sheet.pk %}" class="inline">
+                {% csrf_token %}
+                <button type="submit" onclick="return confirm('Approve results and forward to Dean?')" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold transition shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Approve (HOD)
+                </button>
+            </form>
+            
+            <button type="button" onclick="toggleReturnForm()" class="inline-flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-sm font-semibold transition border border-red-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                Return to Lecturer
+            </button>
+        {% endif %}
+
+        <!-- Dean Actions -->
+        {% if can_dean_approve %}
+            <form method="POST" action="{% url 'results:dean_approve' sheet.pk %}" class="inline">
+                {% csrf_token %}
+                <button type="submit" onclick="return confirm('Approve results and forward to Exams & Records?')" class="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-semibold transition shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Approve (Dean)
+                </button>
+            </form>
+            
+            <button type="button" onclick="toggleReturnForm()" class="inline-flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg text-sm font-semibold transition border border-red-200">
+                Return to HOD/Lecturer
+            </button>
+        {% endif %}
+
+        <!-- Exams Actions -->
+        {% if can_verify_er %}
+            <form method="POST" action="{% url 'results:er_verify' sheet.pk %}" class="inline">
+                {% csrf_token %}
+                <button type="submit" onclick="return confirm('Mark as Verified?')" class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-sm font-semibold transition shadow-sm">
+                    Verify Integrity
+                </button>
+            </form>
+        {% endif %}
+        
+        {% if can_publish_result %}
+             <form method="POST" action="{% url 'results:publish' sheet.pk %}" class="inline">
+                {% csrf_token %}
+                <button type="submit" onclick="return confirm('Publish to Students? This makes results visible permanently.')" class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition shadow-sm">
+                    Publish Results
+                </button>
+            </form>
+        {% endif %}
+    </div>
+    
+    <!-- Hidden Return Form Modal -->
+    <div id="return-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4">
+            <h3 class="text-lg font-bold text-slate-900">Return Result Sheet</h3>
+            <p class="text-sm text-slate-500">Provide a reason for returning this sheet. The lecturer will be notified.</p>
+            <form method="POST" action="{% url 'results:hod_return' sheet.pk %}" id="return-form-target">
+                {% csrf_token %}
+                <textarea name="comments" required placeholder="Reason for return..." class="w-full rounded-lg border-slate-300 focus:border-red-500 focus:ring-red-500 text-sm p-3 min-h-[100px]"></textarea>
+                <div class="flex justify-end gap-3 pt-4">
+                    <button type="button" onclick="closeReturnModal()" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-lg transition">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg transition shadow-sm">Send Back</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Action Toolbar & Tabs -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        
+        <!-- Tab Navigation -->
+        <div class="border-b border-slate-200 bg-slate-50 px-6 pt-4">
+            <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                <button onclick="switchTab('manual')" id="tab-manual" class="whitespace-nowrap border-b-2 border-indigo-500 pb-4 px-1 text-sm font-medium text-indigo-600 focus:outline-none">
+                    Student Scores
+                </button>
+                <button onclick="switchTab('bulk')" id="tab-bulk" class="whitespace-nowrap border-b-2 border-transparent pb-4 px-1 text-sm font-medium text-slate-500 hover:text-slate-700 hover:border-slate-300 focus:outline-none">
+                    Bulk Upload (CSV)
+                </button>
+            </nav>
+        </div>
+
+        <!-- Content Area -->
+        <div class="p-6">
+            
+            <!-- SECTION 1: MANUAL ENTRY FORM -->
+            <div id="panel-manual" class="space-y-6">
+                {% if sheet.status == 'DRAFT' %}
+                    <form method="POST" action="{% url 'results:save_manual_scores' sheet.pk %}" class="space-y-6">
+                        {% csrf_token %}
+                        
+                        <div class="overflow-x-auto border border-slate-200 rounded-lg">
+                            <table class="min-w-full divide-y divide-slate-200">
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Student</th>
+                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">CA Score (Max 30)</th>
+                                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Exam Score (Max 70)</th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-slate-200">
+                                    {% for grade in grades %}
+                                    <tr class="hover:bg-slate-50 transition-colors">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-slate-900">{{ grade.student.user.get_full_name }}</div>
+                                            <div class="text-xs text-slate-500 font-mono">{{ grade.student.matric_number }}</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                                            <input type="number" name="ca_{{ grade.id }}" value="{{ grade.ca_score|default_if_none:'' }}" min="0" max="30" step="0.5"
+                                                   class="w-20 rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-1.5 px-2 text-center">
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                                            <input type="number" name="exam_{{ grade.id }}" value="{{ grade.exam_score|default_if_none:'' }}" min="0" max="70" step="0.5"
+                                                   class="w-20 rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-1.5 px-2 text-center">
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                                            <input type="text" name="remark_{{ grade.id }}" value="{{ grade.remarks|default:'' }}" 
+                                                   class="w-full max-w-xs rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-1.5 px-2 text-right">
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="px-6 py-8 text-center text-slate-500">
+                                            No students registered for this course yet. Please check Registration module.
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="flex justify-end pt-4 border-t border-slate-100">
+                            <button type="submit" class="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold shadow-md transition transform hover:-translate-y-0.5">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                Save All Scores
+                            </button>
+                        </div>
+                    </form>
+                {% else %}
+                    <!-- READ ONLY VIEW FOR REVIEWERS -->
+                    <div class="overflow-x-auto border border-slate-200 rounded-lg">
+                        <table class="min-w-full divide-y divide-slate-200">
+                            <thead class="bg-slate-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Student</th>
+                                    <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">CA Score</th>
+                                    <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Exam Score</th>
+                                    <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Total</th>
+                                    <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Grade</th>
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-slate-200">
+                                {% for grade in grades %}
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-slate-900">{{ grade.student.user.get_full_name }}</div>
+                                        <div class="text-xs text-slate-500 font-mono">{{ grade.student.matric_number }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-slate-600">
+                                        {{ grade.ca_score }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-slate-600">
+                                        {{ grade.exam_score }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-slate-900">
+                                        {{ grade.total_score }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                                        {% if grade.grade_letter == 'F' %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">FAIL</span>
+                                        {% elif grade.grade_letter == 'A' %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">EXCELLENT</span>
+                                        {% else %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">{{ grade.grade_letter }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 text-right truncate max-w-xs">
+                                        {{ grade.remarks|default:"-" }}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="px-6 py-8 text-center text-slate-500">
+                                        No student scores recorded.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- SECTION 2: BULK UPLOAD PANEL (Hidden by default) -->
+            <div id="panel-bulk" class="hidden space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- Download Box -->
+                    <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 flex flex-col items-center justify-center text-center space-y-4">
+                        <div class="h-12 w-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-900">Step 1: Get Template</h4>
+                            <p class="text-xs text-slate-500 mt-1">Download the pre-filled CSV with all registered students.</p>
+                        </div>
+                        <a href="{% url 'results:download_template' sheet.pk %}" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition shadow-sm">
+                            Download CSV
+                        </a>
+                    </div>
+
+                    <!-- Upload Box -->
+                    <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 flex flex-col items-center justify-center text-center space-y-4">
+                        <div class="h-12 w-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-900">Step 2: Upload Data</h4>
+                            <p class="text-xs text-slate-500 mt-1">Fill offline and upload here. Auto-validates matric numbers.</p>
+                        </div>
+                        {% if sheet.status == 'DRAFT' %}
+                            <a href="{% url 'results:upload_csv' sheet.pk %}" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition shadow-sm">
+                                Go to Uploader
+                            </a>
+                        {% else %}
+                             <span class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-400 rounded-lg text-sm font-medium cursor-not-allowed">
+                                Locked
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Final Submission Actions (Only for DRAFT status) -->
+    {% if sheet.status == 'DRAFT' %}
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex justify-between items-center">
+        <p class="text-sm text-slate-500">Ready to finalize? Submitting locks editing until HOD review.</p>
+        <form method="POST" action="{% url 'results:submit' sheet.pk %}" onsubmit="return confirm('Submit these results for approval?');">
+            {% csrf_token %}
+            <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold transition shadow-md">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                Submit for Approval
+            </button>
+        </form>
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+    function switchTab(tabName) {
+        const manualPanel = document.getElementById('panel-manual');
+        const bulkPanel = document.getElementById('panel-bulk');
+        const manualTab = document.getElementById('tab-manual');
+        const bulkTab = document.getElementById('tab-bulk');
+
+        if (tabName === 'manual') {
+            manualPanel.classList.remove('hidden');
+            bulkPanel.classList.add('hidden');
+            
+            // Style Active Tab
+            manualTab.classList.remove('border-transparent', 'text-slate-500');
+            manualTab.classList.add('border-indigo-500', 'text-indigo-600');
+            
+            bulkTab.classList.remove('border-indigo-500', 'text-indigo-600');
+            bulkTab.classList.add('border-transparent', 'text-slate-500');
+        } else {
+            manualPanel.classList.add('hidden');
+            bulkPanel.classList.remove('hidden');
+            
+            // Style Active Tab
+            bulkTab.classList.remove('border-transparent', 'text-slate-500');
+            bulkTab.classList.add('border-indigo-500', 'text-indigo-600');
+            
+            manualTab.classList.remove('border-indigo-500', 'text-indigo-600');
+            manualTab.classList.add('border-transparent', 'text-slate-500');
+        }
+    }
+
+    function toggleReturnForm() {
+        document.getElementById('return-modal').classList.remove('hidden');
+    }
+    
+    function closeReturnModal() {
+        document.getElementById('return-modal').classList.add('hidden');
+    }
+</script>
+{% endblock %}

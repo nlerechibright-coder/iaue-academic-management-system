@@ -1,0 +1,113 @@
+<!-- templates/staff/appointment_list.html -->
+{% extends 'management/base.html' %}
+{% block title %}Appointments for {{ profile.user.get_full_name }}{% endblock %}
+{% block page_title %}Staff Appointments: {{ profile.user.get_full_name }}{% endblock %}
+
+{% block mgmt_content %}
+<div class="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-4">
+    
+    <!-- Header with Back Button and Action -->
+    <div class="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
+        <div class="flex items-center gap-3">
+            <a href="{% url 'staff:list' %}" class="p-2 bg-gray-50 rounded-full hover:bg-gray-100 transition text-gray-600">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </a>
+            <h2 class="text-xl font-bold text-gray-800">
+                Roles &amp; Appointments
+            </h2>
+        </div>
+        
+        <a href="{% url 'staff:appointment_create' profile.pk %}" class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 transition shadow-sm flex items-center gap-2">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i> Assign New Role
+        </a>
+    </div>
+
+    <!-- Staff Info Card -->
+    <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+        <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-lg shrink-0">
+                {{ profile.user.first_name|slice:":1"|upper }}{{ profile.user.last_name|slice:":1"|upper }}
+            </div>
+            <div>
+                <h3 class="font-semibold text-gray-900">{{ profile.user.get_full_name }}</h3>
+                <p class="text-sm text-gray-600">Staff ID: <span class="font-mono">{{ profile.staff_id }}</span></p>
+                {% if profile.department %}
+                    <p class="text-xs text-gray-500 mt-1">Department: {{ profile.department.name }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="mb-4 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-100{% else %}bg-green-50 text-green-700 border border-green-100{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Appointments Table -->
+    <div class="overflow-hidden border border-gray-200 rounded-lg">
+        <table class="w-full text-left bg-white">
+            <thead class="bg-gray-50 text-gray-600 text-sm uppercase tracking-wider">
+                <tr>
+                    <th class="p-4 border-b border-gray-200">Role / Title</th>
+                    <th class="p-4 border-b border-gray-200">Scope</th>
+                    <th class="p-4 border-b border-gray-200">Duration</th>
+                    <th class="p-4 border-b border-gray-200">Status</th>
+                    <th class="p-4 border-b border-gray-200 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for appt in appointments %}
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="p-4">
+                        <div class="font-medium text-gray-900">{{ appt.role }}</div>
+                        {% if appt.description %}
+                            <div class="text-xs text-gray-500 mt-1">{{ appt.description|truncatechars:50 }}</div>
+                        {% endif %}
+                    </td>
+                    <td class="p-4 text-gray-600 text-sm">
+                        {% if appt.faculty %}
+                            <span class="inline-block px-2 py-1 bg-indigo-50 text-indigo-700 rounded text-xs font-semibold">Faculty: {{ appt.faculty.code }}</span>
+                        {% elif appt.department %}
+                            <span class="inline-block px-2 py-1 bg-teal-50 text-teal-700 rounded text-xs font-semibold">Dept: {{ appt.department.code }}</span>
+                        {% else %}
+                            <span class="text-gray-400 italic text-xs">General / Institution-wide</span>
+                        {% endif %}
+                    </td>
+                    <td class="p-4 text-gray-600 text-sm">
+                        <div>{{ appt.start_date|date:"M d, Y" }}</div>
+                        <div class="text-xs text-gray-400">to {{ appt.end_date|date:"M d, Y" }}</div>
+                    </td>
+                    <td class="p-4">
+                        {% if appt.is_active %}
+                            <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full uppercase">Active</span>
+                        {% else %}
+                            <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full uppercase">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td class="p-4 text-right space-x-2">
+                        <!-- Edit/Delete actions can be added here if views support them -->
+                        <button disabled class="text-gray-400 cursor-not-allowed text-sm" title="Edit functionality coming soon">Edit</button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="p-8 text-center text-gray-500 italic bg-gray-50">
+                        No appointments recorded for this staff member yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Footer Note -->
+    <div class="mt-4 text-xs text-gray-500">
+        <p>Note: Active appointments determine access rights for course registration and result entry.</p>
+    </div>
+
+</div>
+{% endblock %}

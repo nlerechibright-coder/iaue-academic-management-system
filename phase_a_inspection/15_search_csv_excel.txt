@@ -1,0 +1,5 @@
+﻿core\settings.py:49: TEMPLATES = [
+core\settings.py:51: 'BACKEND': 'django.template.backends.django.DjangoTemplates',
+core\settings.py:52: 'DIRS': [BASE_DIR / 'templates'],
+core\settings.py:56: 'django.template.context_processors.debug',
+core\settings.py:57: 'django.template.context_processors.request',

@@ -1,0 +1,123 @@
+﻿<!-- templates/courses/course_form.html -->
+{% extends 'management/base.html' %}
+{% block title %}{% if course %}Edit Course{% else %}Create Course{% endif %}{% endblock %}
+{% block page_title %}{% if course %}Update Course Details{% else %}Register New Course{% endif %}{% endblock %}
+
+{% block mgmt_content %}
+<div class="max-w-3xl mx-auto space-y-6">
+    
+    <!-- Header & Back Button -->
+    <div class="flex items-center gap-4">
+        <a href="{% url 'courses:list' %}" class="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition text-slate-600 shadow-sm">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        </a>
+        <div>
+            <h2 class="text-2xl font-bold text-slate-900">
+                {% if course %}Edit {{ course.code }}{% else %}New Course Entry{% endif %}
+            </h2>
+            <p class="text-sm text-slate-500 mt-1">Define academic requirements and curriculum details.</p>
+        </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <form method="POST" action="" class="p-6 md:p-8 space-y-6">
+            {% csrf_token %}
+            
+            <!-- Error Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="p-4 rounded-lg {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200{% else %}bg-emerald-50 text-emerald-700 border border-emerald-200{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Row 1: Code & Title -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="space-y-2">
+                    <label for="code" class="block text-sm font-semibold text-slate-700">Course Code <span class="text-red-500">*</span></label>
+                    <input type="text" name="code" id="code" required 
+                           value="{{ course.code|default:'' }}"
+                           placeholder="e.g., CSC401"
+                           class="w-full rounded-lg border-slate-300 px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none bg-white shadow-sm transition uppercase font-mono tracking-wide">
+                    <p class="text-xs text-slate-500">Unique identifier for this subject.</p>
+                </div>
+                
+                <div class="md:col-span-2 space-y-2">
+                    <label for="title" class="block text-sm font-semibold text-slate-700">Course Title <span class="text-red-500">*</span></label>
+                    <input type="text" name="title" id="title" required 
+                           value="{{ course.title|default:'' }}"
+                           placeholder="e.g., Software Engineering Principles"
+                           class="w-full rounded-lg border-slate-300 px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none bg-white shadow-sm transition">
+                </div>
+            </div>
+
+            <!-- Row 2: Department, Level, Semester -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-100">
+                <div class="space-y-2">
+                    <label for="department" class="block text-sm font-semibold text-slate-700">Department <span class="text-red-500">*</span></label>
+                    <select name="department" id="department" required class="w-full rounded-lg border-slate-300 px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none bg-white shadow-sm transition appearance-none">
+                        <option value="">-- Select Department --</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept.id }}" {% if course.department_id == dept.id %}selected{% endif %}>
+                                {{ dept.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="space-y-2">
+                    <label for="level" class="block text-sm font-semibold text-slate-700">Academic Level <span class="text-red-500">*</span></label>
+                    <select name="level" id="level" required class="w-full rounded-lg border-slate-300 px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none bg-white shadow-sm transition appearance-none">
+                        <option value="">-- Select Level --</option>
+                        <option value="100" {% if course.level == 100 %}selected{% endif %}>100 Level</option>
+                        <option value="200" {% if course.level == 200 %}selected{% endif %}>200 Level</option>
+                        <option value="300" {% if course.level == 300 %}selected{% endif %}>300 Level</option>
+                        <option value="400" {% if course.level == 400 %}selected{% endif %}>400 Level</option>
+                        <option value="500" {% if course.level == 500 %}selected{% endif %}>Postgraduate</option>
+                    </select>
+                </div>
+
+                <div class="space-y-2">
+                    <label for="semester" class="block text-sm font-semibold text-slate-700">Semester <span class="text-red-500">*</span></label>
+                    <select name="semester" id="semester" required class="w-full rounded-lg border-slate-300 px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none bg-white shadow-sm transition appearance-none">
+                        <option value="">-- Select Semester --</option>
+                        <option value="FIRST" {% if course.semester == 'FIRST' %}selected{% endif %}>First Semester</option>
+                        <option value="SECOND" {% if course.semester == 'SECOND' %}selected{% endif %}>Second Semester</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Row 3: Units & Compulsory -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+                <div class="space-y-2">
+                    <label for="credit_units" class="block text-sm font-semibold text-slate-700">Credit Units <span class="text-red-500">*</span></label>
+                    <input type="number" name="credit_units" id="credit_units" min="1" max="6" required 
+                           value="{{ course.credit_units|default:3 }}"
+                           class="w-full rounded-lg border-slate-300 px-4 py-3 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none bg-white shadow-sm transition">
+                    <p class="text-xs text-slate-500">Typically 2 or 3 units per course.</p>
+                </div>
+
+                <div class="flex items-center pt-6">
+                    <input type="checkbox" name="is_compulsory" id="is_compulsory" 
+                           {% if course.is_compulsory %}checked{% endif %}
+                           class="h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                    <label for="is_compulsory" class="ml-3 block text-sm font-medium text-slate-700 cursor-pointer select-none">
+                        Mark as Compulsory Course
+                    </label>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center justify-end gap-3 pt-6 border-t border-slate-100">
+                <a href="{% url 'courses:list' %}" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 rounded-lg transition">Cancel</a>
+                <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                    {% if course %}Save Changes{% else %}Create Course{% endif %}
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+{% endblock %}

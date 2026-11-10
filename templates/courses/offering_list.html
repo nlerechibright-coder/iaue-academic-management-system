@@ -1,0 +1,92 @@
+﻿<!-- templates/courses/offering_list.html -->
+{% extends 'management/base.html' %}
+{% block title %}Course Offerings{% endblock %}
+{% block page_title %}Manage Offerings & Assignments{% endblock %}
+
+{% block mgmt_content %}
+<div class="max-w-7xl mx-auto space-y-6">
+    
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold text-slate-900">Active Offerings</h2>
+            <p class="mt-1 text-sm text-slate-500">Assign lecturers to courses running in {{ session.name|default:"Current Session" }}.</p>
+        </div>
+        <a href="{% url 'courses:list' %}" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">← Back to Catalogue</a>
+    </div>
+
+    {% if offerings %}
+    <!-- TABLE VIEW -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <tr>
+                    <th scope="col" class="px-6 py-4">Course Code</th>
+                    <th scope="col" class="px-6 py-4">Title</th>
+                    <th scope="col" class="px-6 py-4">Level / Sem</th>
+                    <th scope="col" class="px-6 py-4">Assigned Lecturers</th>
+                    <th scope="col" class="px-6 py-4 text-right">Action</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for off in offerings %}
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="whitespace-nowrap px-6 py-4 font-mono font-bold text-indigo-600">{{ off.course.code }}</td>
+                    <td class="px-6 py-4 font-medium text-slate-900">{{ off.course.title }}</td>
+                    <td class="px-6 py-4 text-slate-500">{{ off.level }} • {{ off.get_semester_type_display }}</td>
+                    <td class="px-6 py-4">
+                        {% if off.assignments.exists %}
+                            <div class="flex flex-wrap gap-1">
+                                {% for assign in off.assignments.all %}
+                                    <span class="inline-flex items-center rounded-md bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+                                        {{ assign.lecturer.user.get_full_name }}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <span class="text-xs text-red-500 italic">None Assigned</span>
+                        {% endif %}
+                    </td>
+                    <td class="whitespace-nowrap px-6 py-4 text-right">
+                        <a href="{% url 'courses:manage_assignments' off.pk %}" class="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 transition">
+                            Manage Team
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% else %}
+    <!-- EMPTY STATE WITH GENERATION BUTTON -->
+    <div class="bg-white rounded-xl p-12 text-center border border-dashed border-slate-300 relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-slate-50 to-white opacity-50 pointer-events-none"></div>
+        
+        <div class="relative z-10">
+            <div class="mx-auto h-16 w-16 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+                <svg class="h-8 w-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900">No Active Offerings Found</h3>
+            <p class="mt-2 text-slate-500 max-w-md mx-auto">
+                You have courses in your catalogue, but they haven't been scheduled for the current academic session yet.
+            </p>
+            
+            {% if can_generate %}
+            <form method="POST" action="{% url 'courses:generate_offerings' %}" class="mt-6">
+                {% csrf_token %}
+                <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                    Generate Offerings for All Courses
+                </button>
+            </form>
+            {% else %}
+            <p class="mt-4 text-sm text-amber-600 bg-amber-50 inline-block px-4 py-2 rounded-lg">
+                No courses found in catalogue. Add courses first.
+            </p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

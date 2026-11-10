@@ -1,0 +1,47 @@
+﻿accounts\migrations\0001_initial.py:31: ('groups', models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_name='user_set', related_query_name='user', to='auth.group', verbose_name='groups')),
+courses\forms.py:2: from .models import Course, CourseOffering, Section, LecturerAssignment
+courses\forms.py:64: model = Section
+courses\forms.py:74: fields = ['offering', 'section', 'lecturer']
+courses\forms.py:77: 'section': forms.Select(attrs={'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none'}),
+courses\models.py:34: class Section(models.Model):
+courses\models.py:35: offering = models.ForeignKey(CourseOffering, on_delete=models.CASCADE, related_name='sections')
+courses\models.py:43: return f"{self.offering.course.code} - Section {self.name}"
+courses\models.py:47: section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='assignments')
+courses\models.py:51: unique_together = ('offering', 'section', 'lecturer')
+courses\models.py:54: return f"{self.lecturer.user.get_full_name()} -> {self.section}"
+courses\urls.py:19: # Sections
+courses\urls.py:20: path('sections/', views.section_list, name='section_list'),
+courses\urls.py:21: path('sections/create/', views.section_create, name='section_create'),
+courses\urls.py:22: path('sections/<int:pk>/edit/', views.section_edit, name='section_edit'),
+courses\urls.py:23: path('sections/<int:pk>/delete/', views.section_delete, name='section_delete'),
+courses\views.py:4: from .models import Course, CourseOffering, Section, LecturerAssignment
+courses\views.py:94: # Section CRUD
+courses\views.py:97: sections = Section.objects.select_related('offering__course').all()
+courses\views.py:98: return render(request, 'courses/section_list.html', {'sections': sections})
+courses\views.py:106: messages.success(request, "Section created successfully.")
+courses\views.py:110: return render(request, 'courses/section_form.html', {'form': form, 'title': 'Create Section'})
+courses\views.py:114: section = get_object_or_404(Section, pk=pk)
+courses\views.py:116: form = SectionForm(request.POST, instance=section)
+courses\views.py:119: messages.success(request, "Section updated successfully.")
+courses\views.py:122: form = SectionForm(instance=section)
+courses\views.py:123: return render(request, 'courses/section_form.html', {'form': form, 'title': 'Edit Section'})
+courses\views.py:127: section = get_object_or_404(Section, pk=pk)
+courses\views.py:129: section.delete()
+courses\views.py:130: messages.success(request, "Section deleted successfully.")
+courses\views.py:132: return render(request, 'management/confirm_delete.html', {'object': section, 'url_name': 'courses:section_list'})
+courses\views.py:137: assignments = LecturerAssignment.objects.select_related('offering__course', 'section', 'lecturer__user').all()
+courses\migrations\0001_initial.py:52: name='Section',
+courses\migrations\0001_initial.py:57: ('offering', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sections', to='courses.courseoffering')),
+courses\migrations\0001_initial.py:69: ('section', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='assignments', to='courses.section')),
+courses\migrations\0001_initial.py:72: 'unique_together': {('offering', 'section', 'lecturer')},
+templates\courses\assignment_list.html:18: <th class="p-4">Section</th>
+templates\courses\assignment_list.html:27: <td class="p-4 text-gray-600">{{ a.section.name }}</td>
+templates\courses\section_list.html:2: {% block title %}Sections{% endblock %}
+templates\courses\section_list.html:3: {% block page_title %}Course Sections{% endblock %}
+templates\courses\section_list.html:7: <h3 class="text-lg font-bold text-gray-800">All Sections</h3>
+templates\courses\section_list.html:9: <i data-lucide="plus" class="w-4 h-4"></i> Add Section
+templates\courses\section_list.html:17: <th class="p-4">Section Name</th>
+templates\courses\section_list.html:23: {% for s in sections %}
+templates\courses\section_list.html:34: <tr><td colspan="4" class="p-8 text-center text-gray-500">No sections found.</td></tr>
+templates\management\base.html:41: <i data-lucide="users" class="w-5 h-5"></i> <span>Sections</span>
+templates\staff\staff_create.html:8: <p class="text-sm text-blue-800"><strong>Note:</strong> After creating the staff account, you can assign roles (Lecturer, HOD, Dean, etc.) from the Assignments section.</p>

@@ -1,0 +1,115 @@
+﻿<!-- templates/staff/staff_list.html -->
+{% extends 'management/base.html' %}
+{% block title %}Staff Directory{% endblock %}
+{% block page_title %}Staff Records{% endblock %}
+
+{% block mgmt_content %}
+<div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Header Actions -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+        <div>
+            <h2 class="text-xl font-bold text-slate-900">All Staff Members</h2>
+            <p class="text-sm text-slate-500 mt-1">Manage profiles, assign academic roles (Lecturer/HOD), and track employment status.</p>
+        </div>
+        <a href="{% url 'staff:staff_create' %}" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold text-sm transition shadow-md hover:shadow-lg">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+            Add New Staff
+        </a>
+    </div>
+
+    <!-- Search Bar -->
+    <form method="GET" class="relative max-w-md w-full">
+        <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Search by Name or Staff ID..." 
+               class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition text-sm">
+        <svg class="absolute left-3 top-3 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+    </form>
+
+    <!-- Table/List Container -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        {% if staff %}
+        <table class="min-w-full divide-y divide-slate-200">
+            <thead class="bg-slate-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Member</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Department</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status / Roles</th>
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-slate-200">
+                {% for member in staff %}
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="h-10 w-10 flex-shrink-0">
+                                <div class="h-10 w-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm">
+                                    {{ member.user.get_full_name|slice:":1"|upper }}
+                                </div>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-slate-900">{{ member.user.get_full_name }}</div>
+                                <div class="text-sm text-slate-500">{{ member.staff_id }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-slate-900">{{ member.department.name|default:"Unassigned" }}</div>
+                        <div class="text-xs text-slate-500">{{ member.department.faculty.name|default:"-" }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <!-- Display Current Active Roles Badges -->
+                        <div class="flex flex-wrap gap-1">
+                            {% for appt in member.appointments.all %}
+                                {% if appt.is_active %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                        {% if appt.role == 'LECTURER' %}bg-blue-100 text-blue-800
+                                        {% elif appt.role == 'HOD' %}bg-purple-100 text-purple-800
+                                        {% elif appt.role == 'DEAN' %}bg-amber-100 text-amber-800
+                                        {% else %}bg-emerald-100 text-emerald-800{% endif %}">
+                                        {{ appt.get_role_display }}
+                                    </span>
+                                {% endif %}
+                            {% empty %}
+                                <span class="text-xs text-slate-400 italic">No active roles</span>
+                            {% endfor %}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div class="flex justify-end gap-2">
+                            <!-- EDIT PROFILE -->
+                            <a href="{% url 'staff:staff_edit' pk=member.pk %}" class="text-slate-600 hover:text-indigo-600 p-1.5 rounded-md hover:bg-indigo-50 transition" title="Edit Profile">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            </a>
+                            
+                            <!-- MANAGE ROLES (THE KEY BUTTON) -->
+                            <a href="{% url 'staff:appointment_create' pk=member.pk %}" class="text-emerald-600 hover:text-emerald-700 p-1.5 rounded-md hover:bg-emerald-50 transition" title="Assign Academic Role (Lecturer/HOD)">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </a>
+
+                            <!-- DELETE -->
+                            <a href="{% url 'staff:staff_delete' pk=member.pk %}" class="text-red-600 hover:text-red-700 p-1.5 rounded-md hover:bg-red-50 transition" title="Delete Record">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.137 21H7.863a2 2 0 01-1.996-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="p-12 text-center">
+            <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            <h3 class="mt-2 text-sm font-medium text-slate-900">No staff found</h3>
+            <p class="mt-1 text-sm text-slate-500">Get started by creating a new staff profile.</p>
+            <div class="mt-6">
+                <a href="{% url 'staff:staff_create' %}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                    New Staff Member
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+﻿{% extends 'management/base.html' %}
+{% block title %}Programmes{% endblock %}
+{% block page_title %}Programme Management{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+    <h3 class="text-lg font-bold text-gray-800">All Programmes</h3>
+    <a href="{% url 'institution:programme_create' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition flex items-center gap-2">
+        <i data-lucide="plus" class="w-4 h-4"></i> Add Programme
+    </a>
+</div>
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <table class="w-full text-left">
+        <thead class="bg-gray-50 text-gray-600 text-sm uppercase">
+            <tr>
+                <th class="p-4">Name</th>
+                <th class="p-4">Code</th>
+                <th class="p-4">Department</th>
+                <th class="p-4">Max Level</th>
+                <th class="p-4 text-right">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+            {% for p in programmes %}
+            <tr class="hover:bg-gray-50">
+                <td class="p-4 font-medium text-gray-800">{{ p.name }}</td>
+                <td class="p-4 text-gray-600 font-mono">{{ p.code }}</td>
+                <td class="p-4 text-gray-600">{{ p.department.name }}</td>
+                <td class="p-4 text-gray-600">{{ p.max_level }}</td>
+                <td class="p-4 text-right space-x-2">
+                    <a href="{% url 'institution:programme_edit' p.pk %}" class="text-blue-600 hover:underline text-sm">Edit</a>
+                    <a href="{% url 'institution:programme_delete' p.pk %}" class="text-red-600 hover:underline text-sm">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="p-8 text-center text-gray-500">No programmes found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

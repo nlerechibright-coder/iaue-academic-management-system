@@ -1,0 +1,39 @@
+﻿{% extends 'management/base.html' %}
+{% block title %}Sections{% endblock %}
+{% block page_title %}Course Sections{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-6">
+    <h3 class="text-lg font-bold text-gray-800">All Sections</h3>
+    <a href="{% url 'courses:section_create' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition flex items-center gap-2">
+        <i data-lucide="plus" class="w-4 h-4"></i> Add Section
+    </a>
+</div>
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <table class="w-full text-left">
+        <thead class="bg-gray-50 text-gray-600 text-sm uppercase">
+            <tr>
+                <th class="p-4">Course</th>
+                <th class="p-4">Section Name</th>
+                <th class="p-4">Default</th>
+                <th class="p-4 text-right">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+            {% for s in sections %}
+            <tr class="hover:bg-gray-50">
+                <td class="p-4 font-mono font-medium text-gray-800">{{ s.offering.course.code }}</td>
+                <td class="p-4 text-gray-600">{{ s.name }}</td>
+                <td class="p-4 text-gray-600">{% if s.is_default %}Yes{% else %}No{% endif %}</td>
+                <td class="p-4 text-right space-x-2">
+                    <a href="{% url 'courses:section_edit' s.pk %}" class="text-blue-600 hover:underline text-sm">Edit</a>
+                    <a href="{% url 'courses:section_delete' s.pk %}" class="text-red-600 hover:underline text-sm">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="p-8 text-center text-gray-500">No sections found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,47 @@
+﻿<!-- templates/courses/course_list.html -->
+{% extends 'management/base.html' %}
+{% block title %}Courses{% endblock %}
+{% block page_title %}Course Catalogue{% endblock %}
+
+{% block mgmt_content %}
+<div class="flex justify-between items-center mb-6">
+    <h3 class="text-lg font-bold text-gray-800">All Courses</h3>
+    <a href="{% url 'courses:course_create' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm">
+        + Add New Course
+    </a>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <table class="w-full text-left">
+        <thead class="bg-gray-50 text-gray-600 text-sm uppercase tracking-wider">
+            <tr>
+                <th class="p-4 border-b border-gray-200">Code</th>
+                <th class="p-4 border-b border-gray-200">Title</th>
+                <th class="p-4 border-b border-gray-200">Dept</th>
+                <th class="p-4 border-b border-gray-200">Level</th>
+                <th class="p-4 border-b border-gray-200">Units</th>
+                <th class="p-4 border-b border-gray-200 text-right">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+            {% for c in courses %}
+            <tr class="hover:bg-gray-50 transition">
+                <td class="p-4 font-mono font-bold text-blue-600">{{ c.code }}</td>
+                <td class="p-4 text-gray-800">{{ c.title }}</td>
+                <td class="p-4 text-gray-600 text-xs">{{ c.department.name }}</td>
+                <td class="p-4 text-gray-600">{{ c.level }}</td>
+                <td class="p-4 text-gray-600">{{ c.credit_units }}</td>
+                <td class="p-4 text-right space-x-2">
+                    <a href="{% url 'courses:course_edit' c.pk %}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Edit</a>
+                    <a href="{% url 'courses:course_delete' c.pk %}" class="text-red-600 hover:text-red-800 text-sm font-medium">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="p-8 text-center text-gray-500 italic">No courses found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

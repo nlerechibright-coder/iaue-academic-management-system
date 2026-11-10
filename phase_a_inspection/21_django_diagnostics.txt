@@ -1,0 +1,60 @@
+﻿=== python --version ===
+Python 3.12.10
+
+=== pip --version ===
+pip 25.0.1 from C:\Users\User\Desktop\academic_management_system\venv\Lib\site-packages\pip (python 3.12)
+
+=== manage.py check ===
+System check identified no issues (0 silenced).
+
+=== manage.py showmigrations ===
+academics
+ [X] 0001_initial
+ [X] 0002_alter_academicsession_options_alter_semester_options_and_more
+accounts
+ [X] 0001_initial
+admin
+ [X] 0001_initial
+ [X] 0002_logentry_remove_auto_add
+ [X] 0003_logentry_add_action_flag_choices
+analytics
+ (no migrations)
+approvals
+ (no migrations)
+audit
+ (no migrations)
+auth
+ [X] 0001_initial
+ [X] 0002_alter_permission_name_max_length
+ [X] 0003_alter_user_email_max_length
+ [X] 0004_alter_user_username_opts
+ [X] 0005_alter_user_last_login_null
+ [X] 0006_require_contenttypes_0002
+ [X] 0007_alter_validators_add_error_messages
+ [X] 0008_alter_user_username_max_length
+ [X] 0009_alter_user_last_name_max_length
+ [X] 0010_alter_group_name_max_length
+ [X] 0011_update_proxy_permissions
+ [X] 0012_alter_user_first_name_max_length
+contenttypes
+ [X] 0001_initial
+ [X] 0002_remove_content_type_name
+courses
+ [X] 0001_initial
+institution
+ [X] 0001_initial
+registration
+ (no migrations)
+results
+ (no migrations)
+sessions
+ [X] 0001_initial
+staff
+ [X] 0001_initial
+students
+ [X] 0001_initial
+transcripts
+ (no migrations)
+
+=== manage.py makemigrations --dry-run --verbosity 3 ===
+No changes detected

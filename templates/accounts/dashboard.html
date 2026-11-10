@@ -1,0 +1,26 @@
+﻿{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+    <h2 class="text-2xl font-bold text-gray-800 mb-4">Welcome, {{ user.get_full_name }}</h2>
+    <p class="text-gray-600">Role: <span class="font-semibold text-blue-600">
+        {% if is_management %}System Administrator{% elif is_student %}Student{% elif is_vc %}Vice Chancellor{% elif is_dean %}Dean{% elif is_hod %}Head of Department{% elif is_lecturer %}Lecturer{% elif is_exams %}Exams & Records{% else %}Unassigned{% endif %}
+    </span></p>
+    
+    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="p-4 bg-blue-50 rounded-lg border border-blue-100">
+            <h3 class="font-bold text-blue-800">Profile</h3>
+            <p class="text-sm text-blue-600 mt-1">Manage your personal details.</p>
+        </div>
+        <div class="p-4 bg-green-50 rounded-lg border border-green-100">
+            <h3 class="font-bold text-green-800">Academics</h3>
+            <p class="text-sm text-green-600 mt-1">View courses and results.</p>
+        </div>
+        <div class="p-4 bg-purple-50 rounded-lg border border-purple-100">
+            <h3 class="font-bold text-purple-800">Settings</h3>
+            <p class="text-sm text-purple-600 mt-1">Account preferences.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

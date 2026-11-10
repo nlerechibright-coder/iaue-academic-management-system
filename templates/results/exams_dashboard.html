@@ -1,0 +1,146 @@
+﻿{% extends 'management/base.html' %}
+{% block title %}Exams and Records{% endblock %}
+{% block page_title %}Final Verification{% endblock %}
+
+{% block mgmt_content %}
+<div class="max-w-7xl mx-auto space-y-8">
+
+    <!-- HERO SECTION -->
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-8 text-white shadow-xl ring-1 ring-white/10">
+        <div class="absolute inset-0 opacity-5 pointer-events-none">
+            <svg class="h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <defs><pattern id="lines" width="10" height="10" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="10" y2="10" stroke="white" stroke-width="0.5"/></pattern></defs>
+                <rect width="100%" height="100%" fill="url(#lines)" />
+            </svg>
+        </div>
+        <div class="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-teal-500/20 blur-3xl"></div>
+
+        <div class="relative z-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+            <div>
+                <p class="text-sm font-semibold uppercase tracking-[0.2em] text-teal-300 mb-2">Records Office</p>
+                <h2 class="text-3xl md:text-4xl font-bold tracking-tight text-white">
+                    Publication Center
+                </h2>
+                <p class="mt-2 text-slate-300 max-w-lg text-sm md:text-base">
+                    Verify integrity and publish approved results to students.
+                </p>
+            </div>
+            
+            <div class="flex-shrink-0">
+                <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md px-5 py-3 shadow-lg text-center">
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Awaiting Publish</p>
+                    {% if sheets.exists %}
+                        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-200 text-xs font-bold border border-blue-500/30">
+                            {{ sheets.count }} Ready
+                        </span>
+                    {% else %}
+                        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-200 text-xs font-bold border border-emerald-500/30">
+                            Up to Date
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PENDING SHEETS TABLE -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="border-b border-slate-200 bg-slate-50 px-6 py-4 flex items-center justify-between">
+            <h3 class="text-lg font-bold text-slate-900">Verified Results Ready for Publication</h3>
+        </div>
+        
+        {% if sheets %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-white text-xs font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-100">
+                    <tr>
+                        <th scope="col" class="px-6 py-4">Course / Dept</th>
+                        <th scope="col" class="px-6 py-4">Status</th>
+                        <th scope="col" class="px-6 py-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for sheet in sheets %}
+                    <tr class="group hover:bg-slate-50/80 transition-colors">
+                        <td class="whitespace-nowrap px-6 py-4">
+                            <div class="font-mono font-bold text-indigo-600">{{ sheet.offering.course.code }}</div>
+                            <div class="text-slate-900 font-medium mt-0.5">{{ sheet.offering.course.title }}</div>
+                            <div class="text-xs text-slate-500 mt-1">{{ sheet.offering.course.department.name }}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                {{ sheet.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
+                            <div class="flex items-center justify-end gap-2">
+                                <!-- View Details -->
+                                <a href="{% url 'results:sheet_detail' sheet.pk %}" class="text-slate-400 hover:text-blue-600 p-1.5 rounded-md hover:bg-blue-50 transition" title="Inspect">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                </a>
+                                
+                                <!-- Verify Step (If status is APPROVED_DEAN) -->
+                                {% if sheet.status == 'APPROVED_DEAN' %}
+                                    <form method="POST" action="{% url 'results:er_verify' sheet.pk %}" class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit" onclick="return confirm('Mark as Verified?')" class="inline-flex items-center gap-1 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-teal-700 transition shadow-sm">
+                                            Verify
+                                        </button>
+                                    </form>
+                                {% endif %}
+
+                                <!-- Publish Step (If status is VERIFIED_ER) -->
+                                {% if sheet.status == 'VERIFIED_ER' %}
+                                    <form method="POST" action="{% url 'results:publish' sheet.pk %}" class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit" onclick="return confirm('Publish to Students? This makes results visible permanently.')" class="inline-flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-green-700 transition shadow-sm">
+                                            Publish
+                                        </button>
+                                    </form>
+                                {% endif %}
+                                
+                                <!-- Return Option -->
+                                <button type="button" onclick="toggleReturnForm('{{ sheet.pk }}')" class="inline-flex items-center gap-1 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-100 transition border border-red-100">
+                                    Return
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Hidden Return Form -->
+                    <tr id="return-form-{{ sheet.pk }}" class="hidden bg-red-50/50">
+                        <td colspan="3" class="px-6 py-4">
+                            <form method="POST" action="{% url 'results:er_return' sheet.pk %}" class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                                {% csrf_token %}
+                                <textarea name="comments" required placeholder="Reason for return..." class="flex-1 w-full rounded-lg border-red-200 focus:border-red-500 text-sm p-2"></textarea>
+                                <div class="flex gap-2">
+                                    <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700">Send Back</button>
+                                    <button type="button" onclick="toggleReturnForm('{{ sheet.pk }}')" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-bold hover:bg-slate-300">Cancel</button>
+                                </div>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="py-16 text-center">
+            <h3 class="text-lg font-bold text-slate-900">Publication Queue Empty</h3>
+            <p class="mt-2 text-slate-500">No results are currently awaiting final verification or publication.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    function toggleReturnForm(sheetId) {
+        const row = document.getElementById('return-form-' + sheetId);
+        if (row.classList.contains('hidden')) {
+            row.classList.remove('hidden');
+        } else {
+            row.classList.add('hidden');
+        }
+    }
+</script>
+{% endblock %}

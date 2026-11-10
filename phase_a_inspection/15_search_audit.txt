@@ -1,0 +1,7 @@
+﻿audit\apps.py:4: class AuditConfig(AppConfig):
+audit\apps.py:5: name = 'audit'
+core\settings.py:34: 'audit',
+templates\courses\assignment_form.html:18: <a href="javascript:history.back()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</a>
+templates\courses\course_form.html:18: <a href="javascript:history.back()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</a>
+templates\courses\offering_form.html:18: <a href="javascript:history.back()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</a>
+templates\courses\section_form.html:18: <a href="javascript:history.back()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</a>

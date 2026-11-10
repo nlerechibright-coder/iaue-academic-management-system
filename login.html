@@ -1,0 +1,98 @@
+﻿<!-- templates/accounts/login.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Prevent Caching of Login Page to avoid stale tokens -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <title>Login - Academic Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/lucide-static@latest/font/lucide.css">
+    <style>
+        .lucide-icon { width: 1.25rem; height: 1.25rem; stroke-width: 2; fill: none; stroke: currentColor; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-md w-full bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+        
+        <!-- Header -->
+        <div class="bg-blue-600 p-6 text-center">
+            <h1 class="text-2xl font-bold text-white tracking-tight">AMS Portal</h1>
+            <p class="text-blue-100 text-sm mt-1">Academic Management System</p>
+        </div>
+
+        <!-- Body -->
+        <div class="p-8">
+            
+            
+
+            
+
+            <!-- CRITICAL: Form must have method="POST" and action pointing to login URL -->
+            <form method="POST" action="/login/" class="space-y-6">
+                
+                <!-- CSRF TOKEN MUST BE PRESENT INSIDE THE FORM -->
+                <input type="hidden" name="csrfmiddlewaretoken" value="E8EkW3zqyoCWYlMNeNmMuhVNnKJ6umagntq3BMBRB2aoQiJvRXX6BZxucMwh5D2b">
+                
+                <!-- Username Field -->
+                <div>
+                    <label for="id_username" class="block text-sm font-medium text-gray-700 mb-1">
+                        Username / Matric No. / Staff ID
+                    </label>
+                    <input type="text" name="username" id="id_username" 
+                           required autofocus
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-gray-900"
+                           placeholder="e.g., management, u/2026/00001, STAFF-001">
+                    
+                </div>
+
+                <!-- Password Field -->
+                <div>
+                    <label for="id_password" class="block text-sm font-medium text-gray-700 mb-1">
+                        Password
+                    </label>
+                    <input type="password" name="password" id="id_password" 
+                           required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-gray-900"
+                           placeholder="••••••••">
+                    
+                </div>
+
+                <!-- Remember Me (Visual Only) -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <input id="remember_me" name="remember_me" type="checkbox" 
+                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="remember_me" class="ml-2 block text-sm text-gray-900">Remember me</label>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" 
+                        class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition">
+                    Sign In
+                </button>
+            </form>
+
+            <!-- Helper Text for Testing -->
+            <div class="mt-6 pt-6 border-t border-gray-100 text-center">
+                <p class="text-xs text-gray-500">
+                    Default Admin Credentials:<br>
+                    User: <code class="bg-gray-100 px-1 py-0.5 rounded text-gray-800 font-mono">management</code><br>
+                    Pass: <code class="bg-gray-100 px-1 py-0.5 rounded text-gray-800 font-mono">Management123!</code>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

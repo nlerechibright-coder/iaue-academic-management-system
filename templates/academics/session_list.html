@@ -1,0 +1,50 @@
+<!-- templates/academics/session_list.html -->
+{% extends 'management/base.html' %}
+{% block title %}Academic Sessions{% endblock %}
+{% block page_title %}Manage Academic Sessions{% endblock %}
+
+{% block mgmt_content %}
+<div class="flex justify-between items-center mb-6">
+    <h3 class="text-lg font-bold text-gray-800">All Sessions</h3>
+    <a href="{% url 'academics:session_create' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm">
+        + New Session
+    </a>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <table class="w-full text-left">
+        <thead class="bg-gray-50 text-gray-600 text-sm uppercase tracking-wider">
+            <tr>
+                <th class="p-4 border-b border-gray-200">Session Name</th>
+                <th class="p-4 border-b border-gray-200">Start Date</th>
+                <th class="p-4 border-b border-gray-200">End Date</th>
+                <th class="p-4 border-b border-gray-200">Status</th>
+                <th class="p-4 border-b border-gray-200 text-right">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+            {% for s in sessions %}
+            <tr class="hover:bg-gray-50 transition">
+                <td class="p-4 font-medium text-gray-900">{{ s.name }}</td>
+                <td class="p-4 text-gray-600">{{ s.start_date|default:"-" }}</td>
+                <td class="p-4 text-gray-600">{{ s.end_date|default:"-" }}</td>
+                <td class="p-4">
+                    {% if s.is_active %}
+                        <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">ACTIVE</span>
+                    {% else %}
+                        <span class="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full">INACTIVE</span>
+                    {% endif %}
+                </td>
+                <td class="p-4 text-right space-x-2">
+                    <a href="{% url 'academics:session_edit' s.pk %}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Edit</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="p-8 text-center text-gray-500 italic">No academic sessions found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

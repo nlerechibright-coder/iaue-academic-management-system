@@ -1,0 +1,111 @@
+﻿manage.py:11: from django.core.management import execute_from_command_line
+accounts\models.py:26: is_management = models.BooleanField(default=False, help_text="Designates whether the user can access the custom management dashboard.")
+accounts\views.py:24: """Routes users to their specific dashboards based on their roles."""
+accounts\views.py:25: if user.is_management:
+accounts\views.py:38: """Fallback dashboard for users without specific roles."""
+accounts\migrations\0001_initial.py:29: ('is_management', models.BooleanField(default=False, help_text='Designates whether the user can access the custom management dashboard.')),
+core\urls.py:9: path('management/', include('institution.urls')),
+core\urls.py:10: path('management/', include('courses.urls')),
+core\urls.py:11: path('management/', include('students.urls')),
+core\urls.py:12: path('management/', include('staff.urls')),
+courses\views.py:7: def management_required(view_func):
+courses\views.py:9: @user_passes_test(lambda u: u.is_management)
+courses\views.py:15: @management_required
+courses\views.py:20: @management_required
+courses\views.py:32: @management_required
+courses\views.py:45: @management_required
+courses\views.py:52: return render(request, 'management/confirm_delete.html', {'object': course, 'url_name': 'courses:course_list'})
+courses\views.py:55: @management_required
+courses\views.py:60: @management_required
+courses\views.py:72: @management_required
+courses\views.py:85: @management_required
+courses\views.py:92: return render(request, 'management/confirm_delete.html', {'object': offering, 'url_name': 'courses:offering_list'})
+courses\views.py:95: @management_required
+courses\views.py:100: @management_required
+courses\views.py:112: @management_required
+courses\views.py:125: @management_required
+courses\views.py:132: return render(request, 'management/confirm_delete.html', {'object': section, 'url_name': 'courses:section_list'})
+courses\views.py:135: @management_required
+courses\views.py:140: @management_required
+courses\views.py:152: @management_required
+courses\views.py:165: @management_required
+courses\views.py:172: return render(request, 'management/confirm_delete.html', {'object': assignment, 'url_name': 'courses:assignment_list'})
+institution\urls.py:7: path('dashboard/', views.management_dashboard, name='dashboard'),
+institution\views.py:12: def management_required(view_func):
+institution\views.py:14: @user_passes_test(lambda u: u.is_management)
+institution\views.py:19: @management_required
+institution\views.py:20: def management_dashboard(request):
+institution\views.py:30: return render(request, 'management/dashboard.html', context)
+institution\views.py:33: @management_required
+institution\views.py:36: return render(request, 'management/faculty_list.html', {'faculties': faculties})
+institution\views.py:38: @management_required
+institution\views.py:48: return render(request, 'management/faculty_form.html', {'form': form, 'title': 'Create Faculty'})
+institution\views.py:50: @management_required
+institution\views.py:61: return render(request, 'management/faculty_form.html', {'form': form, 'title': 'Edit Faculty'})
+institution\views.py:63: @management_required
+institution\views.py:70: return render(request, 'management/confirm_delete.html', {'object': faculty, 'url_name': 'institution:faculty_list'})
+institution\views.py:73: @management_required
+institution\views.py:76: return render(request, 'management/department_list.html', {'departments': departments})
+institution\views.py:78: @management_required
+institution\views.py:88: return render(request, 'management/department_form.html', {'form': form, 'title': 'Create Department'})
+institution\views.py:90: @management_required
+institution\views.py:101: return render(request, 'management/department_form.html', {'form': form, 'title': 'Edit Department'})
+institution\views.py:103: @management_required
+institution\views.py:110: return render(request, 'management/confirm_delete.html', {'object': department, 'url_name': 'institution:department_list'})
+institution\views.py:113: @management_required
+institution\views.py:116: return render(request, 'management/programme_list.html', {'programmes': programmes})
+institution\views.py:118: @management_required
+institution\views.py:128: return render(request, 'management/programme_form.html', {'form': form, 'title': 'Create Programme'})
+institution\views.py:130: @management_required
+institution\views.py:141: return render(request, 'management/programme_form.html', {'form': form, 'title': 'Edit Programme'})
+institution\views.py:143: @management_required
+institution\views.py:150: return render(request, 'management/confirm_delete.html', {'object': programme, 'url_name': 'institution:programme_list'})
+staff\models.py:14: class Appointment(models.Model):
+staff\models.py:15: ROLE_CHOICES = [
+staff\models.py:23: staff = models.ForeignKey(StaffProfile, on_delete=models.CASCADE, related_name='appointments')
+staff\models.py:24: role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+staff\models.py:32: appointed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='made_appointments')
+staff\models.py:35: revoked_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='revoked_appointments')
+staff\models.py:41: return f"{self.staff.user.get_full_name()} - {self.get_role_display()}"
+staff\views.py:8: def management_required(view_func):
+staff\views.py:10: @user_passes_test(lambda u: u.is_management)
+staff\views.py:15: @management_required
+staff\views.py:41: @management_required
+staff\migrations\0001_initial.py:29: name='Appointment',
+staff\migrations\0001_initial.py:32: ('role', models.CharField(choices=[('LECTURER', 'Lecturer'), ('HOD', 'Head of Department'), ('DEAN', 'Dean'), ('VC', 'Vice Chancellor'), ('EXAMS_RECORDS', 'Exams and Records')], max_length=20)),
+staff\migrations\0001_initial.py:38: ('appointed_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='made_appointments', to=settings.AUTH_USER_MODEL)),
+staff\migrations\0001_initial.py:41: ('revoked_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='revoked_appointments', to=settings.AUTH_USER_MODEL)),
+staff\migrations\0001_initial.py:42: ('staff', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='appointments', to='staff.staffprofile')),
+students\views.py:8: def management_required(view_func):
+students\views.py:10: @user_passes_test(lambda u: u.is_management)
+students\views.py:15: @management_required
+students\views.py:52: @management_required
+templates\accounts\dashboard.html:7: <p class="text-gray-600">Role: <span class="font-semibold text-blue-600">
+templates\accounts\dashboard.html:8: {% if is_management %}System Administrator{% elif is_student %}Student{% elif is_vc %}Vice Chancellor{% elif is_dean %}Dean{% elif is_hod %}Head of Department{% elif is_lecturer %}Lecturer{% elif is_exams %}Exams & Records{% else %}Unassigned{% endif %}
+templates\courses\assignment_form.html:1: {% extends 'management/base.html' %}
+templates\courses\assignment_list.html:1: {% extends 'management/base.html' %}
+templates\courses\course_form.html:1: {% extends 'management/base.html' %}
+templates\courses\course_list.html:1: {% extends 'management/base.html' %}
+templates\courses\offering_form.html:1: {% extends 'management/base.html' %}
+templates\courses\offering_list.html:1: {% extends 'management/base.html' %}
+templates\courses\section_form.html:1: {% extends 'management/base.html' %}
+templates\courses\section_list.html:1: {% extends 'management/base.html' %}
+templates\management\base.html:6: <title>{% block title %}Management Portal{% endblock %}</title>
+templates\management\base.html:19: <p class="text-xs text-slate-400 mt-1">Management Portal</p>
+templates\management\confirm_delete.html:1: {% extends 'management/base.html' %}
+templates\management\dashboard.html:1: {% extends 'management/base.html' %}
+templates\management\dashboard.html:2: {% block title %}Management Dashboard{% endblock %}
+templates\management\department_form.html:1: {% extends 'management/base.html' %}
+templates\management\department_list.html:1: {% extends 'management/base.html' %}
+templates\management\department_list.html:3: {% block page_title %}Department Management{% endblock %}
+templates\management\faculty_form.html:1: {% extends 'management/base.html' %}
+templates\management\faculty_list.html:1: {% extends 'management/base.html' %}
+templates\management\faculty_list.html:3: {% block page_title %}Faculty Management{% endblock %}
+templates\management\programme_form.html:1: {% extends 'management/base.html' %}
+templates\management\programme_list.html:1: {% extends 'management/base.html' %}
+templates\management\programme_list.html:3: {% block page_title %}Programme Management{% endblock %}
+templates\staff\staff_create.html:1: {% extends 'management/base.html' %}
+templates\staff\staff_create.html:8: <p class="text-sm text-blue-800"><strong>Note:</strong> After creating the staff account, you can assign roles (Lecturer, HOD, Dean, etc.) from the Assignments section.</p>
+templates\staff\staff_list.html:1: {% extends 'management/base.html' %}
+templates\students\student_clearance.html:1: {% extends 'management/base.html' %}
+templates\students\student_list.html:1: {% extends 'management/base.html' %}

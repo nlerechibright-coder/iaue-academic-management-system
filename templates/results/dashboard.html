@@ -1,0 +1,52 @@
+{% extends 'management/base.html' %}
+
+{% block title %}Result Sheets{% endblock %}
+{% block page_title %}Lecturer Results{% endblock %}
+
+{% block mgmt_content %}
+<div class="space-y-6">
+  <div class="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-gradient-to-br from-white to-blue-50 p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <p class="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">Lecturer workspace</p>
+      <h1 class="mt-2 text-3xl font-bold tracking-tight text-slate-900">Result Sheets</h1>
+      <p class="mt-1 text-sm text-slate-600">Upload, review and submit assigned course results.</p>
+    </div>
+    <div class="rounded-xl border border-blue-200 bg-white/80 px-4 py-3 text-sm text-blue-800">
+      {{ sheets|length }} assigned sheet{{ sheets|length|pluralize }}
+    </div>
+  </div>
+
+  <div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-slate-200">
+        <thead class="bg-slate-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Course</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Session</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Status</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200">
+          {% for sheet in sheets %}
+          <tr class="transition hover:bg-slate-50">
+            <td class="px-4 py-3 text-sm font-semibold text-slate-900">{{ sheet.offering.course.code }} - {{ sheet.offering.course.title }}</td>
+            <td class="px-4 py-3 text-sm text-slate-700">{{ sheet.offering.session.name }}</td>
+            <td class="px-4 py-3 text-sm text-slate-700">
+              <span class="inline-flex rounded-full bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-800">{{ sheet.get_status_display }}</span>
+            </td>
+            <td class="px-4 py-3 text-sm">
+              <a href="{% url 'results:sheet_detail' sheet.pk %}" class="inline-flex rounded-lg bg-blue-600 px-3 py-2 font-semibold text-white transition hover:bg-blue-700">Open</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="px-4 py-6 text-center text-sm text-slate-500">No result sheets are currently assigned to this lecturer.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

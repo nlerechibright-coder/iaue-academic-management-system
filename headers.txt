@@ -1,0 +1,24 @@
+HTTP/1.1 302 Found
+Date: Mon, 09 Nov 2026 21:16:10 GMT
+Server: WSGIServer/0.2 CPython/3.12.10
+Content-Type: text/html; charset=utf-8
+Location: /
+X-Frame-Options: DENY
+Vary: Cookie
+Content-Length: 0
+X-Content-Type-Options: nosniff
+Referrer-Policy: same-origin
+Cross-Origin-Opener-Policy: same-origin
+Set-Cookie: csrftoken=BstVNB1ODbj1vpcTUwRbVsYDMmRRayYK; expires=Mon, 08 Nov 2027 21:16:10 GMT; Max-Age=31449600; Path=/; SameSite=Lax
+Set-Cookie: sessionid=0p1yrl7xdhkrrtkth8oz5841kgja9lun; expires=Mon, 23 Nov 2026 21:16:10 GMT; HttpOnly; Max-Age=1209600; Path=/; SameSite=Lax
+
+HTTP/1.1 403 Forbidden
+Date: Mon, 09 Nov 2026 21:16:10 GMT
+Server: WSGIServer/0.2 CPython/3.12.10
+Content-Type: text/html; charset=utf-8
+X-Frame-Options: DENY
+Content-Length: 2544
+X-Content-Type-Options: nosniff
+Referrer-Policy: same-origin
+Cross-Origin-Opener-Policy: same-origin
+

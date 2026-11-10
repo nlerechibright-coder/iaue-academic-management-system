@@ -1,0 +1,80 @@
+﻿{% extends 'management/base.html' %}
+{% block title %}Management Dashboard{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-500 font-medium">Total Students</p>
+                <p class="text-3xl font-bold text-gray-800 mt-1">0</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600"><i data-lucide="users" class="w-6 h-6"></i></div>
+        </div>
+    </div>
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-500 font-medium">Total Staff</p>
+                <p class="text-3xl font-bold text-gray-800 mt-1">0</p>
+            </div>
+            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600"><i data-lucide="briefcase" class="w-6 h-6"></i></div>
+        </div>
+    </div>
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-500 font-medium">Faculties</p>
+                <p class="text-3xl font-bold text-gray-800 mt-1">0</p>
+            </div>
+            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-600"><i data-lucide="building" class="w-6 h-6"></i></div>
+        </div>
+    </div>
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-500 font-medium">Programmes</p>
+                <p class="text-3xl font-bold text-gray-800 mt-1">0</p>
+            </div>
+            <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-orange-600"><i data-lucide="graduation-cap" class="w-6 h-6"></i></div>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <h3 class="font-bold text-gray-800 mb-4">Academic Calendar</h3>
+        <div class="space-y-4">
+            <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-100">
+                <span class="text-sm font-medium text-blue-800">Active Session</span>
+                <span class="text-sm font-bold text-blue-900">Not Set</span>
+            </div>
+            <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-100">
+                <span class="text-sm font-medium text-green-800">Active Semester</span>
+                <span class="text-sm font-bold text-green-900">Not Set</span>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <h3 class="font-bold text-gray-800 mb-4">Quick Actions</h3>
+        <div class="grid grid-cols-2 gap-4">
+            <a href="{% url 'institution:faculty_create' %}" class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition text-center border border-gray-200 block">
+                <i data-lucide="plus-circle" class="w-6 h-6 mx-auto text-gray-600 mb-2"></i>
+                <span class="text-sm font-medium text-gray-700">Add Faculty</span>
+            </a>
+            <a href="{% url 'institution:department_create' %}" class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition text-center border border-gray-200 block">
+                <i data-lucide="plus-circle" class="w-6 h-6 mx-auto text-gray-600 mb-2"></i>
+                <span class="text-sm font-medium text-gray-700">Add Department</span>
+            </a>
+            <a href="{% url 'courses:course_create' %}" class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition text-center border border-gray-200 block">
+                <i data-lucide="plus-circle" class="w-6 h-6 mx-auto text-gray-600 mb-2"></i>
+                <span class="text-sm font-medium text-gray-700">Add Course</span>
+            </a>
+            <a href="{% url 'courses:assignment_create' %}" class="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition text-center border border-gray-200 block">
+                <i data-lucide="plus-circle" class="w-6 h-6 mx-auto text-gray-600 mb-2"></i>
+                <span class="text-sm font-medium text-gray-700">Assign Lecturer</span>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
